@@ -21,6 +21,9 @@ defmodule TutoKbrwStack.MixProject do
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
-    [{:poison, "~> 4.0.1"}]
+    [
+      {:plug_cowboy, "~> 2.4.1"},
+      {:poison, "~> 4.0.1"}
+    ]
   end
 end

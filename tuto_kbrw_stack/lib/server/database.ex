@@ -44,8 +44,8 @@ defmodule Server.Database do
   @impl true
   def handle_call({:create, key, val}, _from, my_table) do
     case lookup(my_table, key) do
-      {:ok, val} ->
-        {:reply, val, my_table}
+      {:ok, _val} ->
+        {:reply, :error, my_table}
 
       :error ->
         :ets.insert(my_table, {key, val})
