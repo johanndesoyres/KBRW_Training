@@ -1,0 +1,30 @@
+# vim 
+.*.swp
+TODO
+# elixir generated files
+deps
+_build
+mix.lock
+# webpack generated file 
+web/.DS_Store
+web/bundle.js
+web/node_modules/
+web/package-lock.json
+#webflow directory
+web/*.webflow/*
+#react build directory 
+priv/
+#orders
+
+#Markdown generation
+*/README.html
+# /doc/*.html
+
+#NPM created files
+node_modules
+package-lock.json
+
+
+.password
+.DS_Store
+
