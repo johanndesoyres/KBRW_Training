@@ -1,4 +1,4 @@
-require('!!file-loader?name=[name].[ext]!./webflow/orders.html')
+require('!!file-loader?name=[name].[ext]!./webflow/index.html')
 require('!!file-loader?name=[name].[ext]!./webflow/order1.html')
 
 /* required library for our React app */
@@ -7,8 +7,7 @@ var React = require("react")
 var createReactClass = require('create-react-class')
 
 /* required css for our application */
-require('./webflow/css/webflow.css');
-require('./webflow/css/varela.css');
+require('./webflow/css/tuto.webflow.css');
 
 
 var orders = [
@@ -20,21 +19,19 @@ var orders = [
 
 //To render this JSON in the table, we will have to map the list on a **`JSXZ`** render. 
 
-
 var Page = createReactClass({
     render() {
-        return orders.map(order => (
-            < JSXZ in="orders" sel=".container" >
-                <Z sel=".text-block-a">{order.remoteid}</Z>
-                <Z sel=".text-block-b">{order.custom.customer.full_name}</Z>
-                <Z sel=".text-block-c">{order.custom.billing_address}</Z>
-                <Z sel=".text-block-d">{order.items}</Z>
-            </JSXZ >
-        ))
+        return <JSXZ in="index" sel=".container">
+            <Z sel=".table-lines">{orders.map(order => (
+                <JSXZ in="index" sel=".table-line">
+                    <Z sel=".orderid">{order.remoteid}</Z>
+                    <Z sel=".full_name">{order.custom.customer.full_name}</Z>
+                    <Z sel=".billing_address">{order.custom.billing_address}</Z>
+                    <Z sel=".itemnb">{order.items}</Z>
+                </JSXZ>)
+            )}</Z>
+        </JSXZ>
     }
 })
 
-ReactDOM.render(
-    <Page />,
-    document.getElementById("root")
-)
+ReactDOM.render(<Page />, document.getElementById("root"));
