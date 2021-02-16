@@ -5,12 +5,17 @@
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.5",
     "@testing-library/user-event": "^12.7.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-jsxz": "^1.0.1",
+    "cookie": "^0.1.5",
+    "qs": "^6.9.6",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-scripts": "4.0.2",
     "web-vitals": "^1.1.0",
-    "webpack": "^5.21.2"
+    "webpack": "^5.21.2",
+    "when": "^3.7.8",
+    "xhr2": "^0.1.4"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",

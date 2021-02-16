@@ -1,5 +1,6 @@
 defmodule Server.Router do
   use Plug.Router
+  plug(Plug.Static, from: "priv/static", at: "/static")
   import Plug.Conn
 
   plug(:fetch_query_params)
@@ -78,6 +79,8 @@ defmodule Server.Router do
         send_resp(conn, 500, "Error")
     end
   end
+
+  get(_, do: send_file(conn, 200, "priv/static/index.html"))
 
   match _ do
     send_resp(conn, 404, "Page Not Found")

@@ -28,6 +28,7 @@ module.exports = {
                                 dir: 'webflow'
                             }
                         ]],
+                    plugins: ["transform-object-rest-spread"],
                 }
             },
             //...
