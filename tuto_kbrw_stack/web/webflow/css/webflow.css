@@ -1,4 +1,4 @@
-/* Generated on: Tue Feb 16 2021 08:01:15 GMT+0000 (Coordinated Universal Time) */
+/* Generated on: Tue Feb 16 2021 22:14:24 GMT+0000 (Coordinated Universal Time) */
 /* ==========================================================================
    normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css 
    ========================================================================== */
@@ -2220,6 +2220,10 @@ textarea.w-input,textarea.w-select {
     margin-left: 40px;
 }
 
+.error {
+    margin-left: 40px;
+}
+
 .body {
     margin-top: -3px;
     margin-bottom: 6px;
@@ -2333,7 +2337,14 @@ textarea.w-input,textarea.w-select {
     text-align: center;
 }
 
-.text-block-2 {
+.order_id {
+    margin-top: -6px;
+    margin-bottom: -3px;
+    padding-top: 11px;
+    text-align: center;
+}
+
+.logo {
     margin-top: -6px;
     margin-bottom: -3px;
     padding-top: 11px;
@@ -2411,7 +2422,7 @@ textarea.w-input,textarea.w-select {
 
 .button-3 {
     margin-top: 16px;
-    margin-left: 63px;
+    margin-left: 108px;
     background-color: transparent;
     box-shadow: 1px 1px 3px 0 transparent;
     -webkit-transition: opacity 200ms ease;
@@ -2536,6 +2547,21 @@ textarea.w-input,textarea.w-select {
 
 .text-block-7 {
     font-size: 20px;
+    text-align: center;
+}
+
+.full_name {
+    padding-top: 6px;
+    text-align: center;
+}
+
+.billing_adress {
+    padding-top: 8px;
+    text-align: center;
+}
+
+.items {
+    padding-top: 8px;
     text-align: center;
 }
 
