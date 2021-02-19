@@ -11,7 +11,7 @@ defmodule Server.Supervisor do
   def init(:ok) do
     children = [
       {Server.Database, name: Server.Database},
-      Plug.Cowboy.child_spec(scheme: :http, plug: Server.Router, options: [port: 4001])
+      Plug.Cowboy.child_spec(scheme: :http, plug: Server.Router, options: [port: 4004])
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

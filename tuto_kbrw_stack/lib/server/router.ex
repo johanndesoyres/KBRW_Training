@@ -2,6 +2,8 @@ defmodule Server.Router do
   use Plug.Router
 
   plug(Plug.Static, from: "priv/static", at: "/static")
+  plug(Plug.Static, from: "priv/static", at: "/order/static")
+
   import Plug.Conn
 
   plug(:fetch_query_params)
@@ -81,51 +83,8 @@ defmodule Server.Router do
     end
   end
 
-  get "/api/orders" do
-    case conn.params do
-      %{} ->
-        case map_size(conn.params) do
-          0 ->
-            content =
-              Server.Database.get_all(Server.Database)
-              |> Enum.map(fn order ->
-                Map.put(elem(order, 1), :id, elem(order, 0))
-              end)
-
-            send_resp(conn, 200, Poison.encode!(content))
-
-          _ ->
-            content = Server.Database.search(Server.Database, conn.params)
-            send_resp(conn, 200, inspect(content))
-        end
-
-      _ ->
-        send_resp(conn, 500, "Error")
-    end
-  end
-
-  get "/api/order" do
-    case conn.params do
-      %{"id" => id} ->
-        case Server.Database.lookup(Server.Database, id) do
-          {:ok, content} ->
-            send_resp(conn, 200, Poison.encode!(content))
-
-          :error ->
-            send_resp(conn, 404, "This id doesn't exist !")
-        end
-
-      _ ->
-        send_resp(conn, 500, "Error")
-    end
-  end
-
-  # get(_, do: send_file(conn, 200, "priv/static/index.html"))
-
-  get _ do
+  def insert_orders do
     orders = [
-      {"000000189",
-       %{full_name: "TOTO & CIE", billing_address: "Some where in the world", items: 2}},
       {"000000189",
        %{full_name: "TOTO & CIE", billing_address: "Some where in the world", items: 2}},
       {"000000190",
@@ -149,7 +108,72 @@ defmodule Server.Router do
           true
       end
     end)
+  end
 
+  get "/api/orders" do
+    if Server.Database.is_empty(Server.Database) do
+      insert_orders()
+    end
+
+    case conn.params do
+      %{"del" => id} ->
+        case Server.Database.delete(Server.Database, id) do
+          {_, nil, _} ->
+            send_resp(conn, 500, Poison.encode!(%{"msg" => "The deletion failed !"}))
+
+          _ ->
+            content =
+              Server.Database.get_all(Server.Database)
+              |> Enum.map(fn order ->
+                Map.put(elem(order, 1), :id, elem(order, 0))
+              end)
+
+            send_resp(conn, 200, Poison.encode!(content))
+        end
+
+      %{} ->
+        case map_size(conn.params) do
+          0 ->
+            content =
+              Server.Database.get_all(Server.Database)
+              |> Enum.map(fn order ->
+                Map.put(elem(order, 1), :id, elem(order, 0))
+              end)
+
+            send_resp(conn, 200, Poison.encode!(content))
+
+          _ ->
+            content =
+              Server.Database.search(Server.Database, conn.params)
+              |> Enum.map(fn order ->
+                Map.put(elem(order, 1), :id, elem(order, 0))
+              end)
+
+            send_resp(conn, 200, Poison.encode!(content))
+        end
+
+      _ ->
+        send_resp(conn, 500, Poison.encode!(%{"msg" => "Error"}))
+    end
+  end
+
+  get "/api/order" do
+    case conn.params do
+      %{"id" => id} ->
+        case Server.Database.lookup(Server.Database, id) do
+          {:ok, content} ->
+            send_resp(conn, 200, Poison.encode!(Map.put(content, :id, id)))
+
+          :error ->
+            send_resp(conn, 404, Poison.encode!(%{"msg" => "This id doesn't exist !"}))
+        end
+
+      _ ->
+        send_resp(conn, 500, Poison.encode!(%{"msg" => "Error"}))
+    end
+  end
+
+  get _ do
     send_file(conn, 200, "priv/static/index.html")
   end
 

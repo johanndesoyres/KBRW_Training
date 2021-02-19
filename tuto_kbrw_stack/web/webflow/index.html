@@ -1,6 +1,5 @@
-<!DOCTYPE html>
-<!-- This site was created in Webflow. http://www.webflow.com -->
-<!-- Last Published: Tue Feb 16 2021 22:14:24 GMT+0000 (Coordinated Universal Time) -->
+<!DOCTYPE html><!-- This site was created in Webflow. http://www.webflow.com -->
+<!-- Last Published: Fri Feb 19 2021 16:39:41 GMT+0000 (Coordinated Universal Time) -->
 <html data-wf-domain="kbrw-training-web-site.webflow.io" data-wf-page="6025062a97680e1dba7e3e67"
     data-wf-site="6025062a97680e77aa7e3e66" data-wf-status="1">
 
@@ -11,7 +10,7 @@
     <meta content="Webflow" name="generator" />
     <link href="./static/styles.css" rel="stylesheet" type="text/css" />
     <!--<link
-        href="https://uploads-ssl.webflow.com/6025062a97680e77aa7e3e66/css/kbrw-training-web-site.webflow.62c861133.css"
+        href="https://uploads-ssl.webflow.com/6025062a97680e77aa7e3e66/css/kbrw-training-web-site.webflow.3c000b8af.css"
         rel="stylesheet" type="text/css" />-->
     <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" type="text/javascript"></script>
     <script type="text/javascript">WebFont.load({ google: { families: ["Varela:400"] } });</script>
@@ -58,6 +57,7 @@
                                 <h5 class="heading-3">Customer</h5>
                                 <h5 class="heading-3">Adress</h5>
                                 <h5 class="heading-3">Quantity</h5>
+                                <h5 class="heading-3">Delete</h5>
                                 <h5 class="heading-3">Details</h5>
                                 <h5 class="heading-3">Pay</h5>
                                 <div class="div-block-2">
@@ -72,11 +72,12 @@
                                 <div class="div-block-2">
                                     <div class="items">45</div>
                                 </div>
-                                <div><a href="./static/order1.html" class="button-3 w-button"><span
-                                            class="text-span-6"></span></a>
-                                </div>
+                                <div class="div-block-2"><a class="delete-button y-button"><span
+                                            class="text-span-6"></span></a></div>
+                                <div class="div-block-2"><a class="details-button z-button"><span
+                                            class="text-span-6"></span></a></div>
                                 <div class="div-block-2">
-                                    <div class="logo"><span class="text-span-4"></span></div>
+                                    <div class="order_id"><span class="text-span-4"></span></div>
                                     <div class="text-block-3">Status :  init<br />Payment method : delivery</div>
                                 </div>
                             </div>
@@ -84,6 +85,25 @@
                         </section>
                     </div>
                 </div>
+                <div class="modal-wrapper hidden">
+                    <div class="modal-content">
+                        <div class="form-block-2 w-form">
+                            <form id="email-form" name="email-form" data-name="Email Form" class="form-3"><label
+                                    for="email" class="field-label-2">Are you sure to do this<br /><br /> deletion
+                                    ?</label></form>
+                            <div class="w-form-done">
+                                <div>Thank you! Your submission has been received!</div>
+                            </div>
+                            <div class="w-form-fail">
+                                <div>Oops! Something went wrong while submitting the form.</div>
+                            </div>
+                        </div>
+                        <div><a href="#" class="confirm-button-yes w-button">Yes</a><a href="#"
+                                class="confirm-button-no w-button">No</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="hidden"></div>
             </div>
         </div>
     </div>

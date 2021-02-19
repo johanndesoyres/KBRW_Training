@@ -8,6 +8,7 @@
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-jsxz": "^1.0.1",
     "cookie": "^0.1.5",
+    "jquery": "^3.5.1",
     "qs": "^6.9.6",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",

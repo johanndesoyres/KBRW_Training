@@ -17,6 +17,13 @@ defmodule Server.Database do
     end
   end
 
+  def is_empty(server) do
+    case :ets.first(server) do
+      '$end_of_table' -> true
+      _ -> false
+    end
+  end
+
   def get_all(server) do
     :ets.tab2list(server)
   end
