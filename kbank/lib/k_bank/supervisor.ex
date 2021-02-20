@@ -9,7 +9,10 @@ defmodule KBank.Supervisor do
 
   @impl true
   def init(:ok) do
-    children = [{KBank.Account, name: KBank.Account}]
+    children = [
+      {KBank.Account, name: KBank.Account},
+      Plug.Cowboy.child_spec(scheme: :http, plug: KBank.Router, options: [port: 4004])
+    ]
 
     Supervisor.init(children, strategy: :one_for_one)
   end
