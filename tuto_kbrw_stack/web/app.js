@@ -74,7 +74,7 @@ var Layout = createReactClass(
         //  on cache le modal
         // on appel la func callback de spec avec res, ici 
 
-        getInitialState: function () {
+        /*getInitialState: function () {
             return { modal: this.props.modal };
         },
         modal(spec) {
@@ -87,36 +87,36 @@ var Layout = createReactClass(
                     }
                 }
             })
-        },
+        },*/
         render() {
             // on recupére notre component DeleteModal et on lui passe
             // this.state.modal.type en props
 
             // this.modal = la fonction
             // this.state.modal = modal dans la fonction modal
-            var modal_component = {
+            /*var modal_component = {
                 'delete': (props) => <DeleteModal {...props} />
             }[this.state.modal && this.state.modal.type];
             modal_component = modal_component && modal_component(this.state.modal)
 
             var props = {
                 ...this.props, modal: this.modal
-            }
+            }*/
 
+            /*<Z sel=".modal-wrapper" className={cn(classNameZ, { 'hidden': !modal_component })}>
+            {modal_component}
+            </Z>*/
 
             return <JSXZ in="index" sel=".layout" >
                 <Z sel=".layout-container">
-                    <this.props.Child {...props} />
-                </Z>
-                <Z sel=".modal-wrapper" className={cn(classNameZ, { 'hidden': !modal_component })}>
-                    {modal_component}
+                    <this.props.Child {...this.props} />
                 </Z>
             </JSXZ >
         }
     });
 
 
-var DeleteModal = createReactClass({
+/*var DeleteModal = createReactClass({
     render() {
         return <JSXZ in="index" sel=".modal-wrapper">
             <Z sel=".field-label-2">
@@ -130,7 +130,7 @@ var DeleteModal = createReactClass({
              </Z>
         </JSXZ>
     }
-})
+})*/
 
 var Header = createReactClass(
     {
@@ -142,6 +142,21 @@ var Header = createReactClass(
             </JSXZ>
         }
     });
+
+/* <Z sel=".y-button" onClick={() => this.props.modal({
+     type: 'delete',
+     title: 'Order deletion',
+     message: `Are you sure you want to delete this ?`,
+     callback: (value) => {
+         //Do something with the return value
+         if (value) {
+             GoTo("orders", "", "del=" + order.id)
+         } else {
+             GoTo("orders", "")
+         }
+
+     }
+ })}><ChildrenZ /></Z>*/
 
 var Orders = createReactClass(
     {
@@ -155,20 +170,7 @@ var Orders = createReactClass(
                 <Z sel=".full_name" >{order.full_name}</Z>
                 <Z sel=".billing_adress" >{order.billing_address}</Z>
                 <Z sel=".items" >{order.items}</Z>
-                <Z sel=".y-button" onClick={() => this.props.modal({
-                    type: 'delete',
-                    title: 'Order deletion',
-                    message: `Are you sure you want to delete this ?`,
-                    callback: (value) => {
-                        //Do something with the return value
-                        if (value) {
-                            GoTo("orders", "", "del=" + order.id)
-                        } else {
-                            GoTo("orders", "")
-                        }
-
-                    }
-                })}><ChildrenZ /></Z>
+                <Z sel=".y-button" onClick={() => GoTo("orders", "", "del=" + order.id)}><ChildrenZ /></Z>
                 <Z sel=".z-button" onClick={() => GoTo("order", order.id)}><ChildrenZ /></Z>
             </JSXZ>))
         }

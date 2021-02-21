@@ -19,7 +19,7 @@ defmodule Server.Database do
 
   def is_empty(server) do
     case :ets.first(server) do
-      '$end_of_table' -> true
+      :"$end_of_table" -> true
       _ -> false
     end
   end
