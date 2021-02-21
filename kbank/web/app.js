@@ -55,18 +55,44 @@ var Layout = createReactClass(
 
 
 
-var Header = createReactClass(
-    {
-        render() {
-            return <JSXZ in="accounts" sel=".header">
-                <Z sel=".del-button" value="Delete"><ChildrenZ /></Z>
-                <Z sel=".post-button" value="Post"><ChildrenZ /></Z>
-                <Z sel=".accounts-content">
-                    <this.props.Child {...this.props} />
-                </Z>
-            </JSXZ>
-        }
-    });
+class Header extends React.Component {
+
+    constructor(props) {
+        super(props);
+        this.state = { delId: '', postId: '', postName: '', postAmt: '' };
+    }
+
+    handleChangeDelId(event) {
+        this.setState({ delId: event.target.value });
+    }
+
+    handleChangePostId(event) {
+        this.setState({ postId: event.target.value });
+    }
+
+    handleChangePostName(event) {
+        this.setState({ postName: event.target.value });
+    }
+
+    handleChangePostAmt(event) {
+        this.setState({ postAmt: event.target.value });
+    }
+
+
+    render() {
+        return <JSXZ in="accounts" sel=".header">
+            <Z sel=".del-input" value={this.state.value} onChange={() => this.handleChangeDelId}><ChildrenZ /></Z>
+            <Z sel=".del-button" value="Delete" onClick={() => GoTo("accounts", "", "id=" + this.state.delId)}><ChildrenZ /></Z>
+            <Z sel=".post-id" value={this.state.value} onChange={() => this.handleChangePostId}><ChildrenZ /></Z>
+            <Z sel=".post-name" value={this.state.value} onChange={() => this.handleChangePostName}><ChildrenZ /></Z>
+            <Z sel=".post-amt" value={this.state.value} onChange={() => this.handleChangePostAmt}><ChildrenZ /></Z>
+            <Z sel=".post-button" value="Post" onClick={() => GoTo("accounts", "", "id=" + this.state.postId + "&name=" + this.state.postName + "&amt=" + this.state.postAmt)}><ChildrenZ /></Z>
+            <Z sel=".accounts-content">
+                <this.props.Child {...this.props} />
+            </Z>
+        </JSXZ>
+    }
+}
 
 var Accounts = createReactClass(
     {

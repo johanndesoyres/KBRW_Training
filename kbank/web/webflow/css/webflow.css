@@ -539,7 +539,7 @@ label {
     font-weight: bold
 }
 
-.w-input,.w-select,.del-input {
+.w-input,.w-select,.del-input,.post-id,.post-name,.post-amt {
     display: block;
     width: 100%;
     height: 38px;
@@ -2216,6 +2216,26 @@ textarea.w-input,textarea.w-select {
 }
 
 .form {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-align-self: center;
+    -ms-flex-item-align: center;
+    align-self: center;
+}
+
+.delete-form {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-align-self: center;
+    -ms-flex-item-align: center;
+    align-self: center;
+}
+
+.post-form {
     display: -webkit-box;
     display: -webkit-flex;
     display: -ms-flexbox;
