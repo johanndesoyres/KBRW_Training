@@ -15,6 +15,17 @@ defmodule KBank.Account do
     end
   end
 
+  def get_all(server) do
+    :ets.tab2list(server)
+  end
+
+  def is_empty(server) do
+    case :ets.first(server) do
+      '$end_of_table' -> true
+      _ -> false
+    end
+  end
+
   def create_account(server, val) do
     {accnt_nb, _val} = GenServer.call(server, {:create, val})
     accnt_nb
@@ -32,6 +43,10 @@ defmodule KBank.Account do
     GenServer.call(server, {:debit, accnt_nb, amount})
   end
 
+  def update_name(server, accnt_nb, name) do
+    GenServer.call(server, {:update, accnt_nb, name})
+  end
+
   ## Server Callbacks
 
   @impl true
@@ -47,7 +62,7 @@ defmodule KBank.Account do
 
       {:ok, _} ->
         :dets.open_file(:file_table, [{:file, 'Accnt_table.txt'}, {:ram_file, true}])
-        :dets.to_ets(:file_table,accnt_table)
+        :dets.to_ets(:file_table, accnt_table)
         :dets.close(:file_table)
         schedule_work()
         {:ok, accnt_table}
@@ -70,13 +85,14 @@ defmodule KBank.Account do
 
   @impl true
   def handle_call({:create, val}, _from, accnt_table) do
-    accnt_nb = Enum.to_list(1..13)
-    |> Enum.map(fn _nb ->
-      Enum.random(0..9) |> Integer.to_string()
-    end)
-    |> Enum.reduce("", fn digit, acc ->
-      acc <> digit
-    end)
+    accnt_nb =
+      Enum.to_list(1..13)
+      |> Enum.map(fn _nb ->
+        Enum.random(0..9) |> Integer.to_string()
+      end)
+      |> Enum.reduce("", fn digit, acc ->
+        acc <> digit
+      end)
 
     :ets.insert(accnt_table, {accnt_nb, val})
     change_last_update(accnt_table, accnt_nb)
@@ -122,6 +138,20 @@ defmodule KBank.Account do
 
       :error ->
         {:reply, {accnt_nb, amount}, accnt_table}
+    end
+  end
+
+  @impl true
+  def handle_call({:update, accnt_nb, name}, _from, accnt_table) do
+    case lookup(accnt_table, accnt_nb) do
+      {:ok, val} ->
+        new_map = %{val | :name => name}
+        :ets.update_element(accnt_table, accnt_nb, {2, new_map})
+        change_last_update(accnt_table, accnt_nb)
+        {:reply, {accnt_nb, new_map}, accnt_table}
+
+      :error ->
+        {:reply, {accnt_nb, name}, accnt_table}
     end
   end
 

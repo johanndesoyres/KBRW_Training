@@ -1,5 +1,4 @@
-require('!!file-loader?name=[name].[ext]!./webflow/index.html')
-require('!!file-loader?name=[name].[ext]!./webflow/order1.html')
+require('!!file-loader?name=[name].[ext]!./webflow/accounts.html')
 
 /* required library for our React app */
 var ReactDOM = require('react-dom')
@@ -15,8 +14,8 @@ var $ = require("jquery");
 /* required css for our application */
 require('./webflow/css/webflow.css');
 
+
 var GoTo = (route, params, query) => {
-    //var qs = Qs.stringify(query)
     var url = routes[route].path(params) + ((query == '') ? '' : ('?' + query))
     history.pushState({}, "", url)
     onPathChange()
@@ -24,177 +23,85 @@ var GoTo = (route, params, query) => {
 
 // remoteProps renvoie un tuple avec l'url qui sera utilisé par l'API et le  nom de la prop à récupérer
 var remoteProps = {
-    /*user: (props) => {
-        return {
-            url: "/api/me",
-            prop: "user"
-        }
-    },*/
-    orders: (props) => {
-        //if (!props.user)
-        //return
-        var qs = { ...props.qs/*, user_id: props.user.value.id*/ }
+    accounts: (props) => {
+        var qs = { ...props.qs }
         var query = Qs.stringify(qs)
-        return {
-            url: "/api/orders" + (query == '' ? '' : '?' + query),
-            prop: "orders"
+        var res = ""
+        if (query == '') {
+            res = "/api/accounts"
+        } else if (query.includes("id=") && (query.includes("name=") || query.includes("amt="))) {
+            res = "/api/post/account?" + query
+        } else if (query.includes("id=")) {
+            res = "/api/delete/account?" + query
         }
-    },
-    order: (props) => {
         return {
-            url: "/api/order/" + '?id=' + props.order_id,
-            prop: "order"
-        }
-    }
-}
 
-//fonction pour affecter ou enlever la classe hidden à notre modal component
-var cn = function () {
-    var args = arguments, classes = {}
-    for (var i in args) {
-        var arg = args[i]
-        if (!arg) continue
-        if ('string' === typeof arg || 'number' === typeof arg) {
-            arg.split(" ").filter((c) => c != "").map((c) => {
-                classes[c] = true
-            })
-        } else if ('object' === typeof arg) {
-            for (var key in arg) classes[key] = arg[key]
+            url: res,
+            prop: "accounts"
         }
     }
-    return Object.keys(classes).map((k) => classes[k] && k || '').join(' ')
 }
 
 var Layout = createReactClass(
     {
-        // permet d'afficher ou de cacher le component en fonction de notre state
-        // this.state va changer l'etat de modal, ici l'att modal
-        // spec ici designe le component Orders
-        // res le resultat de l'interac
-        //  on cache le modal
-        // on appel la func callback de spec avec res, ici 
-
-        getInitialState: function () {
-            return { modal: this.props.modal };
-        },
-        modal(spec) {
-            this.setState({
-                modal: {
-                    ...spec, callback: (res) => {
-                        this.setState({ modal: null }, () => {
-                            if (spec.callback) spec.callback(res)
-                        })
-                    }
-                }
-            })
-        },
         render() {
-            // on recupére notre component DeleteModal et on lui passe
-            // this.state.modal.type en props
-
-            // this.modal = la fonction
-            // this.state.modal = modal dans la fonction modal
-            var modal_component = {
-                'delete': (props) => <DeleteModal {...props} />
-            }[this.state.modal && this.state.modal.type];
-            modal_component = modal_component && modal_component(this.state.modal)
-
-            var props = {
-                ...this.props, modal: this.modal
-            }
-
-
-            return <JSXZ in="index" sel=".layout" >
+            return <JSXZ in="accounts" sel=".layout" >
                 <Z sel=".layout-container">
-                    <this.props.Child {...props} />
-                </Z>
-                <Z sel=".modal-wrapper" className={cn(classNameZ, { 'hidden': !modal_component })}>
-                    {modal_component}
+                    <this.props.Child {...this.props} />
                 </Z>
             </JSXZ >
         }
     });
 
 
-var DeleteModal = createReactClass({
-    render() {
-        return <JSXZ in="index" sel=".modal-wrapper">
-            <Z sel=".field-label-2">
-                {this.props.message}
-            </Z>
-            <Z sel=".confirm-button-yes" onClick={() => { this.props.callback(true) }}>
-                Yes
-           </Z>
-            <Z sel=".confirm-button-no" onClick={() => { this.props.callback(false) }}>
-                No
-             </Z>
-        </JSXZ>
-    }
-})
 
 var Header = createReactClass(
     {
         render() {
-            return <JSXZ in="index" sel=".header">
-                <Z sel=".header-container">
+            return <JSXZ in="accounts" sel=".header">
+                <Z sel=".del-button" value="Delete"><ChildrenZ /></Z>
+                <Z sel=".post-button" value="Post"><ChildrenZ /></Z>
+                <Z sel=".accounts-content">
                     <this.props.Child {...this.props} />
                 </Z>
             </JSXZ>
         }
     });
 
-var Orders = createReactClass(
+var Accounts = createReactClass(
     {
         statics: {
-            remoteProps: [remoteProps.orders]
+            remoteProps: [remoteProps.accounts]
         },
 
         render() {
-            return this.props.orders.value.map((order, index) => (<JSXZ in="index" sel=".table-line" key={index}>
-                <Z sel=".order_id" >{order.id}</Z>
-                <Z sel=".full_name" >{order.full_name}</Z>
-                <Z sel=".billing_adress" >{order.billing_address}</Z>
-                <Z sel=".items" >{order.items}</Z>
-                <Z sel=".y-button" onClick={() => this.props.modal({
-                    type: 'delete',
-                    title: 'Order deletion',
-                    message: `Are you sure you want to delete this ?`,
-                    callback: (value) => {
-                        //Do something with the return value
-                        if (value) {
-                            GoTo("orders", "", "del=" + order.id)
-                        } else {
-                            GoTo("orders", "")
-                        }
-
-                    }
-                })}><ChildrenZ /></Z>
-                <Z sel=".z-button" onClick={() => GoTo("order", order.id)}><ChildrenZ /></Z>
+            return this.props.accounts.value.map((account, index) => (<JSXZ in="accounts" sel=".accounts-content" key={index}>
+                <Z sel=".account_nb" >{account.accnt_nb}</Z>
+                <Z sel=".first_name" >{account.first_name}</Z>
+                <Z sel=".name" >{account.name}</Z>
+                <Z sel=".amount" >{account.amt}</Z>
+                <Z sel=".last_update" >{account.last_update}</Z>
             </JSXZ>))
         }
     });
 
-//<Z sel=".y-button" onClick={() => GoTo("orders", "", "del=" + order.id)}><ChildrenZ /></Z>
+var Child = createReactClass({
+    render() {
+        var [ChildHandler, ...rest] = this.props.handlerPath
+        return <ChildHandler {...this.props} handlerPath={rest} />
+    }
+})
 
+var ErrorPage = createReactClass({
 
-var Order = createReactClass(
-    {
-        statics: {
-            remoteProps: [remoteProps.order]
-        },
-
-        render() {
-            console.log("this.props : ")
-            console.log(this.props)
-            return <JSXZ in="order1" sel=".section-4">
-                <Z sel=".order_order_id">Order ID : {this.props.order.value.id}</Z>
-                <Z sel=".order_full_name">Full Name :{this.props.order.value.full_name}</Z>
-                <Z sel=".order_billing_adress">Billing Adress : {this.props.order.value.billing_address}</Z>
-                <Z sel=".order_items">Items : {this.props.order.value.items}</Z>
-            </JSXZ>
-        }
-    });
-
+    render() {
+        console.log("ErrorPage")
+        console.log(this)
+        return <JSXZ in="accounts" sel=".header-container">
+            <Z sel=".error">{this.props.message} : {this.props.code}</Z>
+        </JSXZ>
+    }
+})
 
 // L'objet HTTP nous permettra d'envoyer des requêtes à notre serveur
 var HTTP = new (function () {
@@ -229,45 +136,17 @@ var HTTP = new (function () {
     })
 })()
 
+
 var routes = {
-    "orders": {
+    "accounts": {
         path: (params) => {
             return "/";
         },
         match: (path, qs) => {
-            return (path == "/") && { handlerPath: [Layout, Header, Orders] }
-        }
-    },
-    "order": {
-        path: (params) => {
-            return "/order/" + params;
-        },
-        match: (path, qs) => {
-            var r = new RegExp("/order/([^/]*)$").exec(path)
-            return r && { handlerPath: [Layout, Header, Order], order_id: r[1] }
+            return (path == "/") && { handlerPath: [Layout, Header, Accounts] }
         }
     }
 }
-
-
-
-var Child = createReactClass({
-    render() {
-        var [ChildHandler, ...rest] = this.props.handlerPath
-        return <ChildHandler {...this.props} handlerPath={rest} />
-    }
-})
-
-var ErrorPage = createReactClass({
-
-    render() {
-        console.log("ErrorPage")
-        console.log(this)
-        return <JSXZ in="index" sel=".section">
-            <Z sel=".error">{this.props.message} : {this.props.code}</Z>
-        </JSXZ>
-    }
-})
 
 var browserState = { Child: Child }
 
@@ -297,14 +176,14 @@ function addRemoteProps(props) {
             return resolve(props)
 
 
-        // https://github.com/cujojs/when/blob/master/docs/api.md#whenmap
+        // https://github.com/cujojs/when/blob/master/docs/api.md#whenmap 
         // When.map permet de mettre la serie d'operation de la fonction map dans une Promise
 
-        // Promise va contenir les resultats de toutes les requetes
-        var promise = When.map( // Returns a Promise that either on a list of resolved remoteProps, or on the rejected value by the first fetch who failed
+        // Promise va contenir les resultats de toutes les requetes 
+        var promise = When.map( // Returns a Promise that either on a list of resolved remoteProps, or on the rejected value by the first fetch who failed 
             remoteProps.map((spec) => { // Returns a list of Promises that resolve on list of resolved remoteProps ([{url: '/api/me', value: {name: 'Guillaume'}, prop: 'user'}])
                 return HTTP.get(spec.url)
-                    .then((result) => { spec.value = result; return spec }) // we want to keep the url in the value resolved by the promise here. spec = {url: '/api/me', value: {name: 'Guillaume'}, prop: 'user'}
+                    .then((result) => { spec.value = result; return spec }) // we want to keep the url in the value resolved by the promise here. spec = {url: '/api/me', value: {name: 'Guillaume'}, prop: 'user'} 
             })
         )
 
@@ -320,6 +199,7 @@ function addRemoteProps(props) {
 
     })
 }
+
 
 function onPathChange() {  // fuonction qui va retourner les components à afficher pour le path courant
 
@@ -350,11 +230,11 @@ function onPathChange() {  // fuonction qui va retourner les components à affic
     if (!route)
         return ReactDOM.render(<ErrorPage message={"Not Found"} code={404} />, document.getElementById('root'))
 
-
     addRemoteProps(browserState).then(
         (props) => {
             browserState = props
             //Log our new browserState
+            console.log("browser state :")
             console.log(browserState)
             //Render our components using our remote data
             ReactDOM.render(<Child {...browserState} />, document.getElementById('root'))
@@ -365,3 +245,4 @@ function onPathChange() {  // fuonction qui va retourner les components à affic
 
 window.addEventListener("popstate", () => { onPathChange() })
 onPathChange()
+
