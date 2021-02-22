@@ -1,12 +1,11 @@
 defmodule KBank.Router do
   use Plug.Router
 
-  plug(Plug.Static, from: "priv/static", at: "/static")
-
   import Plug.Conn
   import Plug.BasicAuth
 
-  plug(:basic_auth, username: "hello", password: "secret")
+  plug(Plug.Static, from: "priv/static", at: "/static")
+  plug(:basic_auth, username: "hello", password: "jojo")
   plug(:fetch_query_params)
   plug(:match)
   plug(:dispatch)
