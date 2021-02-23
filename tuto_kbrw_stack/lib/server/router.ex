@@ -10,10 +10,6 @@ defmodule Server.Router do
   plug(:match)
   plug(:dispatch)
 
-  # get "/" do
-  # send_resp(conn, 200, "Welcome")
-  # end
-
   get "/get" do
     case conn.params do
       %{"id" => id} ->
