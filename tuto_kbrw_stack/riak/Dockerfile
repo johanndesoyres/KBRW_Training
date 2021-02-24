@@ -1,2 +1,2 @@
 FROM basho/riak-kv
-ENV RIAK_SEARCH on
+RUN echo "search = on\n" >> /etc/riak/riak.conf

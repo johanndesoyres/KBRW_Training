@@ -10,4 +10,4 @@ Server.Riak.assign_index("orders","order_index")
 
 Server.Riak.update_bucket("orders", "status", "state", "init")
 
-Server.Riak.search("order_index",'custom.shipping_method:"colissimo"')
+Server.Riak.search("order_index","*:*")

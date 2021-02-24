@@ -10,7 +10,7 @@ defmodule Server.Router do
   plug(:match)
   plug(:dispatch)
 
-  get "/get" do
+  get "/old/get" do
     case conn.params do
       %{"id" => id} ->
         case Server.Database.lookup(Server.Database, id) do
@@ -23,7 +23,7 @@ defmodule Server.Router do
     end
   end
 
-  get "/create" do
+  get "/old//create" do
     case conn.params do
       %{"id" => id} ->
         case Server.Database.create(Server.Database, id, conn.params) do
@@ -36,7 +36,7 @@ defmodule Server.Router do
     end
   end
 
-  get "/delete" do
+  get "/old//delete" do
     case conn.params do
       %{"id" => id} ->
         case Server.Database.delete(Server.Database, id) do
@@ -49,7 +49,7 @@ defmodule Server.Router do
     end
   end
 
-  get "/update" do
+  get "/old//update" do
     case conn.params do
       %{"id" => id} ->
         case Server.Database.delete(Server.Database, id) do
@@ -68,7 +68,7 @@ defmodule Server.Router do
     end
   end
 
-  get "/search" do
+  get "/old//search" do
     case conn.params do
       %{} ->
         content = Server.Database.search(Server.Database, conn.params)
@@ -79,7 +79,9 @@ defmodule Server.Router do
     end
   end
 
-  def insert_orders do
+  # ---------------------------------------------------------------------------
+
+  def old_insert_orders do
     orders = [
       {"000000189",
        %{full_name: "TOTO & CIE", billing_address: "Some where in the world", items: 2}},
@@ -106,7 +108,7 @@ defmodule Server.Router do
     end)
   end
 
-  get "/api/orders" do
+  get "/old/api/orders" do
     if Server.Database.is_empty(Server.Database) do
       insert_orders()
     end
@@ -153,7 +155,7 @@ defmodule Server.Router do
     end
   end
 
-  get "/api/order" do
+  get "/old/api/order" do
     case conn.params do
       %{"id" => id} ->
         case Server.Database.lookup(Server.Database, id) do
@@ -162,6 +164,113 @@ defmodule Server.Router do
 
           :error ->
             send_resp(conn, 404, Poison.encode!(%{"msg" => "This id doesn't exist !"}))
+        end
+
+      _ ->
+        send_resp(conn, 500, Poison.encode!(%{"msg" => "Error"}))
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+
+  def insert_orders() do
+    :inets.start()
+    JsonLoader.load_to_riak_v2("../orders_dump/orders_chunk0.json")
+  end
+
+  def filter_order(order) do
+    filtered_order = Map.put(%{}, "id", order["remoteid"])
+
+    filtered_order =
+      Map.put(
+        filtered_order,
+        "full_name",
+        order["custom"]["customer"]["full_name"]
+      )
+
+    filtered_order =
+      Map.put(
+        filtered_order,
+        "billing_address",
+        order["custom"]["billing_address"]["street"] |> Enum.at(0)
+      )
+
+    filtered_order =
+      Map.put(
+        filtered_order,
+        "items",
+        length(order["custom"]["items"])
+      )
+
+    filtered_order
+  end
+
+  delete "/api/delete/order" do
+    case conn.params do
+      %{"id" => id} ->
+        response = Server.Riak.delete_object("orders", id)
+        send_resp(conn, 200, response)
+
+      _ ->
+        send_resp(conn, 500, Poison.encode!(%{"msg" => "Error"}))
+    end
+  end
+
+  get "/api/order" do
+    case conn.params do
+      %{} ->
+        content =
+          Server.Riak.search(
+            "order_index",
+            conn.params["query"],
+            conn.params["page"],
+            conn.params["rows"],
+            conn.params["sort"]
+          )
+
+        case (content |> Enum.at(1) |> elem(1))["status"] do
+          0 ->
+            send_resp(conn, 200, Poison.encode!((content |> Enum.at(0) |> elem(1))["docs"]))
+
+          status ->
+            send_resp(conn, status, Poison.encode!(content["error"]))
+        end
+
+      _ ->
+        send_resp(conn, 500, Poison.encode!(%{"msg" => "Error"}))
+    end
+  end
+
+  get "/api/orders" do
+    records =
+      (Server.Riak.search(
+         "order_index",
+         "*:*"
+       )
+       |> Enum.at(0)
+       |> elem(1))["docs"]
+
+    if length(records) == 0 do
+      insert_orders()
+    end
+
+    case conn.params do
+      %{} ->
+        content =
+          Server.Riak.search(
+            "order_index",
+            conn.params["query"],
+            conn.params["page"],
+            conn.params["rows"],
+            conn.params["sort"]
+          )
+
+        case (content |> Enum.at(1) |> elem(1))["status"] do
+          0 ->
+            send_resp(conn, 200, Poison.encode!((content |> Enum.at(0) |> elem(1))["docs"]))
+
+          status ->
+            send_resp(conn, status, Poison.encode!(content["error"]))
         end
 
       _ ->

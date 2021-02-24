@@ -27,7 +27,7 @@ defmodule JsonLoader do
 
     order_list
     |> Stream.chunk_every(10)
-    |> Stream.map(fn orders_chunk ->
+    |> Enum.map(fn orders_chunk ->
       orders_chunk
       |> Stream.map(fn order ->
         Task.async(fn ->

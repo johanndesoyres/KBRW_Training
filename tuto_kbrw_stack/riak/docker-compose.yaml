@@ -1,7 +1,7 @@
 version: "2"
 services:
   coordinator:
-    image: basho/riak-kv
+    image: johann/riak-kv
     ports:
       - "8087:8087"
       - "8098:8098"
@@ -13,7 +13,7 @@ services:
     volumes:
       - schemas:/etc/riak/schemas
   member:
-    image: basho/riak-kv
+    image: johann/riak-kv
     ports:
       - "8087"
       - "8098"

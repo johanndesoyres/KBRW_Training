@@ -18,6 +18,8 @@ require('./webflow/css/webflow.css');
 var GoTo = (route, params, query) => {
     //var qs = Qs.stringify(query)
     var url = routes[route].path(params) + ((query == '') ? '' : ('?' + query))
+    console.log("go to")
+    console.log(url)
     history.pushState({}, "", url)
     onPathChange()
 }
@@ -36,13 +38,13 @@ var remoteProps = {
         var qs = { ...props.qs/*, user_id: props.user.value.id*/ }
         var query = Qs.stringify(qs)
         return {
-            url: "/api/orders" + (query == '' ? '' : '?' + query),
+            url: "/api/orders" + (query == '' ? '?page=0&rows=30&query=*:*&sort=creation_date_index' : '?' + query),
             prop: "orders"
         }
     },
     order: (props) => {
         return {
-            url: "/api/order/" + '?id=' + props.order_id,
+            url: "/api/orders" + '?page=0&rows=30&query=_yz_rk:' + props.order_id + '&sort=creation_date_index',
             prop: "order"
         }
     }
@@ -165,13 +167,15 @@ var Orders = createReactClass(
         },
 
         render() {
-            return this.props.orders.value.map((order, index) => (<JSXZ in="index" sel=".table-line" key={index}>
-                <Z sel=".order_id" >{order.id}</Z>
-                <Z sel=".full_name" >{order.full_name}</Z>
-                <Z sel=".billing_adress" >{order.billing_address}</Z>
-                <Z sel=".items" >{order.items}</Z>
+            //console.log(this.props.orders.value[1])
+            return this.props.orders.value.map((order, index) =>
+            (<JSXZ in="index" sel=".table-line" key={index}>
+                <Z sel=".order_id" >{order["_yz_rk"]}</Z>
+                <Z sel=".full_name" >{order["custom.customer.full_name"][0]}</Z>
+                <Z sel=".billing_adress" >{order["custom.shipping_method"][0]}</Z>
+                <Z sel=".items" >{order["status.state"][0]}</Z>
                 <Z sel=".y-button" onClick={() => GoTo("orders", "", "del=" + order.id)}><ChildrenZ /></Z>
-                <Z sel=".z-button" onClick={() => GoTo("order", order.id)}><ChildrenZ /></Z>
+                <Z sel=".z-button" onClick={() => GoTo("order", order["_yz_rk"], '')}><ChildrenZ /></Z>
             </JSXZ>))
         }
     });
@@ -189,10 +193,10 @@ var Order = createReactClass(
             console.log("this.props : ")
             console.log(this.props)
             return <JSXZ in="order1" sel=".section-4">
-                <Z sel=".order_order_id">Order ID : {this.props.order.value.id}</Z>
-                <Z sel=".order_full_name">Full Name :{this.props.order.value.full_name}</Z>
-                <Z sel=".order_billing_adress">Billing Adress : {this.props.order.value.billing_address}</Z>
-                <Z sel=".order_items">Items : {this.props.order.value.items}</Z>
+                <Z sel=".order_order_id">Remote ID : {this.props.order.value[0]["_yz_rk"]}</Z>
+                <Z sel=".order_full_name">Full Name :{this.props.order.value[0]["custom.customer.full_name"][0]}</Z>
+                <Z sel=".order_billing_adress">Shipping Method: {this.props.order.value[0]["custom.shipping_method"][0]}</Z>
+                <Z sel=".order_items">Status State : {this.props.order.value[0]["status.state"][0]}</Z>
             </JSXZ>
         }
     });
@@ -334,6 +338,8 @@ function onPathChange() {  // fuonction qui va retourner les components à affic
         qs: qs,
         cookie: cookies
     }
+
+
     var route, routeProps
     //We try to match the requested path to one our our routes
     for (var key in routes) {
