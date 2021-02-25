@@ -13,19 +13,6 @@ defmodule JsonLoader do
       |> Poison.Parser.parse!(%{})
 
     order_list
-    |> Stream.map(fn order ->
-      Server.Riak.post_object("orders", order["id"], Poison.encode!(Map.delete(order, "id")))
-    end)
-    |> Stream.take(length(order_list))
-    |> Enum.to_list()
-  end
-
-  def load_to_riak_v2(json_file) do
-    order_list =
-      File.read!(json_file)
-      |> Poison.Parser.parse!(%{})
-
-    order_list
     |> Stream.chunk_every(10)
     |> Enum.map(fn orders_chunk ->
       orders_chunk
@@ -40,7 +27,7 @@ defmodule JsonLoader do
     |> Stream.run()
   end
 
-  def load_to_riak_v3(json_file) do
+  def load_to_riak_v2(json_file) do
     order_list =
       File.read!(json_file)
       |> Poison.Parser.parse!(%{})
