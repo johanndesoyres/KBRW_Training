@@ -175,7 +175,7 @@ defmodule Server.Router do
 
   def insert_orders() do
     :inets.start()
-    JsonLoader.load_to_riak_v2("../orders_dump/orders_chunk0.json")
+    JsonLoader.load_to_riak_v3("../orders_dump/orders_chunk0.json")
   end
 
   def filter_order(order) do
@@ -209,7 +209,22 @@ defmodule Server.Router do
     case conn.params do
       %{"id" => id} ->
         response = Server.Riak.delete_object("orders", id)
-        send_resp(conn, 200, response)
+
+        case response do
+          [] ->
+            records =
+              (Server.Riak.search(
+                 "order_index",
+                 "*:*"
+               )
+               |> Enum.at(0)
+               |> elem(1))["docs"]
+
+            send_resp(conn, 200, Poison.encode!(records))
+
+          _ ->
+            send_resp(conn, 500, response)
+        end
 
       _ ->
         send_resp(conn, 500, Poison.encode!(%{"msg" => "Error"}))
@@ -223,8 +238,8 @@ defmodule Server.Router do
           Server.Riak.search(
             "order_index",
             conn.params["query"],
-            conn.params["page"],
-            conn.params["rows"],
+            elem(Integer.parse(conn.params["page"]), 0),
+            elem(Integer.parse(conn.params["rows"]), 0),
             conn.params["sort"]
           )
 
@@ -260,8 +275,8 @@ defmodule Server.Router do
           Server.Riak.search(
             "order_index",
             conn.params["query"],
-            conn.params["page"],
-            conn.params["rows"],
+            elem(Integer.parse(conn.params["page"]), 0),
+            elem(Integer.parse(conn.params["rows"]), 0),
             conn.params["sort"]
           )
 

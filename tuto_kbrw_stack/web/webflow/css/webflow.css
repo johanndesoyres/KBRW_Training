@@ -2608,11 +2608,6 @@ textarea.w-input,textarea.w-select {
     justify-content: center;
 }
 
-.text-block-7 {
-    font-size: 20px;
-    text-align: center;
-}
-
 .full_name {
     padding-top: 6px;
     text-align: center;
@@ -2684,6 +2679,49 @@ textarea.w-input,textarea.w-select {
     display: none;
 }
 
+.page-2 {
+    position: relative;
+    left: 740px;
+    margin-left: 0px;
+    padding-left: 10px;
+    background-color: #fff;
+    color: #000;
+    font-size: 20px;
+    text-align: center;
+}
+
+.page-1 {
+    position: relative;
+    left: 740px;
+    margin-left: 0px;
+    padding-left: 10px;
+    background-color: #fff;
+    color: #000;
+    font-size: 20px;
+    text-align: center;
+}
+
+.page-0 {
+    position: relative;
+    left: 740px;
+    margin-left: 0px;
+    padding-left: 10px;
+    background-color: #fff;
+    color: #000;
+    font-size: 20px;
+    text-align: center;
+}
+
+.page-3 {
+    position: relative;
+    left: 740px;
+    margin-left: 0px;
+    padding-left: 10px;
+    background-color: #fff;
+    color: #000;
+    font-size: 20px;
+    text-align: center;
+}
 
 @font-face {
     font-family: 'Fa brands 400';

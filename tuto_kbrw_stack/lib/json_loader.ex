@@ -39,4 +39,19 @@ defmodule JsonLoader do
     end)
     |> Stream.run()
   end
+
+  def load_to_riak_v3(json_file) do
+    order_list =
+      File.read!(json_file)
+      |> Poison.Parser.parse!(%{})
+
+    order_list
+    |> Task.async_stream(
+      fn order ->
+        Server.Riak.post_object("orders", order["id"], Poison.encode!(Map.delete(order, "id")))
+      end,
+      max_concurrency: 10
+    )
+    |> Stream.run()
+  end
 end

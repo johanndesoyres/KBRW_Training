@@ -39,10 +39,10 @@ defmodule Server.Riak do
   end
 
   def delete_object(bucket, key) do
-    {:ok, {{'HTTP/1.1', 204, _msg}, _headers, body}} =
+    {:ok, {{'HTTP/1.1', _status, _msg}, _headers, body}} =
       :httpc.request(
         :delete,
-        {'http://127.0.0.1:8098/buckets/#{bucket}/keys/#{key}returnbody=true', []},
+        {'http://127.0.0.1:8098/buckets/#{bucket}/keys/#{key}?returnbody=true', []},
         [],
         []
       )
@@ -114,9 +114,9 @@ defmodule Server.Riak do
     {:ok, {_status, _headers, body}} =
       :httpc.request(
         :get,
-        {'http://127.0.0.1:8098/search/query/#{index}/?wt=json&q=#{query}&rows=#{rows}&start=#{0}&sort=#{
-           sort
-         }%20desc', []},
+        {'http://127.0.0.1:8098/search/query/#{index}/?wt=json&q=#{query}&rows=#{rows}&start=#{
+           rows * page
+         }&sort=#{sort}%20desc', []},
         [],
         []
       )
