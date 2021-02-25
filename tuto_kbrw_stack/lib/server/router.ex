@@ -12,7 +12,7 @@ defmodule Server.Router do
 
   def insert_orders() do
     :inets.start()
-    JsonLoader.load_to_riak_v3("../orders_dump/orders_chunk0.json")
+    JsonLoader.load_to_riak_v2("../orders_dump/orders_chunk0.json")
   end
 
   delete "/api/delete/order" do
