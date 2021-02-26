@@ -1,0 +1,17 @@
+JsonLoader.load_to_riak_v2("../orders_dump/orders_chunk0.json")
+
+Server.Riak.get_keys("orders")
+
+Server.Riak.upload_schema("./riak/order_schema.xml","test")
+
+Server.Riak.put_index("order","order_index")
+
+Server.Riak.assign_index("orders","order_index")
+
+Server.Riak.update_bucket("orders", "status", "state", "init")
+
+Server.Riak.search("order_index","id:nat_order000147703")
+
+Server.Riak.get_object("orders", "nat_order000147742")
+
+Server.Riak.delete("orders","nat_order000147701")

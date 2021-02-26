@@ -1,0 +1,7 @@
+docker volume create --name=schemas
+docker-compose up -d
+docker-compose scale member=2
+echo "search = on\n" >> /etc/riak/riak.conf
+docker container restart riak_member_1
+docker container restart riak_member_2
+docker container restart riak_coordinator_1

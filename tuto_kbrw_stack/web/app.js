@@ -15,12 +15,49 @@ var $ = require("jquery");
 /* required css for our application */
 require('./webflow/css/webflow.css');
 
-var GoTo = (route, params, query) => {
+var GoTo = (route, params, query, page = 0) => {
     //var qs = Qs.stringify(query)
     var url = routes[route].path(params) + ((query == '') ? '' : ('?' + query))
     history.pushState({}, "", url)
-    onPathChange()
+    onPathChange(page)
 }
+
+var SetButtonColor = (page_nb) => {
+    if (page_nb == 0) {
+        document.getElementById("page-0").style.color = "blue";
+        document.getElementById("page-1").style.color = "black";
+        document.getElementById("page-2").style.color = "black";
+        document.getElementById("page-3").style.color = "black";
+    }
+    else if (page_nb == 1) {
+        document.getElementById("page-0").style.color = "black";
+        document.getElementById("page-1").style.color = "blue";
+        document.getElementById("page-2").style.color = "black";
+        document.getElementById("page-3").style.color = "black";
+    }
+    else if (page_nb == 2) {
+        document.getElementById("page-0").style.color = "black";
+        document.getElementById("page-1").style.color = "black";
+        document.getElementById("page-2").style.color = "blue";
+        document.getElementById("page-3").style.color = "black";
+    }
+    else if (page_nb == 3) {
+        document.getElementById("page-0").style.color = "black";
+        document.getElementById("page-1").style.color = "black";
+        document.getElementById("page-2").style.color = "black";
+        document.getElementById("page-3").style.color = "blue";
+    }
+
+
+}
+
+async function Delete(id) {
+    var url = "/api/delete/order?id=" + id
+    let response = await HTTP.delete(url)
+    GoTo("orders", "", "")
+}
+
+
 
 // remoteProps renvoie un tuple avec l'url qui sera utilisé par l'API et le  nom de la prop à récupérer
 var remoteProps = {
@@ -35,14 +72,15 @@ var remoteProps = {
         //return
         var qs = { ...props.qs/*, user_id: props.user.value.id*/ }
         var query = Qs.stringify(qs)
+        var page = props.page
         return {
-            url: "/api/orders" + (query == '' ? '' : '?' + query),
+            url: "/api/orders" + (query == '' ? '?page=' + page + '&rows=30&query=*:*&sort=creation_date_index' : '?' + 'page=0&rows=30&' + query.replaceAll("%3D", ":").replaceAll("%26", "&") + '&sort=creation_date_index'),
             prop: "orders"
         }
     },
     order: (props) => {
         return {
-            url: "/api/order/" + '?id=' + props.order_id,
+            url: "/api/orders" + '?page=0&rows=30&query=_yz_rk:' + props.order_id + '&sort=creation_date_index',
             prop: "order"
         }
     }
@@ -136,7 +174,11 @@ var Header = createReactClass(
     {
         render() {
             return <JSXZ in="index" sel=".header">
-                <Z sel=".header-container">
+                <Z sel=".page-0" onClick={() => { SetButtonColor(0); GoTo("orders", "", "") }}><ChildrenZ /></Z>
+                <Z sel=".page-1" onClick={() => { SetButtonColor(1); GoTo("orders", "", "", 1) }}><ChildrenZ /></Z>
+                <Z sel=".page-2" onClick={() => { SetButtonColor(2); GoTo("orders", "", "", 2) }}><ChildrenZ /></Z>
+                <Z sel=".page-3" onClick={() => { SetButtonColor(3); GoTo("orders", "", "", 3) }}><ChildrenZ /></Z>
+                <Z sel=".orders">
                     <this.props.Child {...this.props} />
                 </Z>
             </JSXZ>
@@ -163,15 +205,16 @@ var Orders = createReactClass(
         statics: {
             remoteProps: [remoteProps.orders]
         },
-
         render() {
-            return this.props.orders.value.map((order, index) => (<JSXZ in="index" sel=".table-line" key={index}>
-                <Z sel=".order_id" >{order.id}</Z>
-                <Z sel=".full_name" >{order.full_name}</Z>
-                <Z sel=".billing_adress" >{order.billing_address}</Z>
-                <Z sel=".items" >{order.items}</Z>
-                <Z sel=".y-button" onClick={() => GoTo("orders", "", "del=" + order.id)}><ChildrenZ /></Z>
-                <Z sel=".z-button" onClick={() => GoTo("order", order.id)}><ChildrenZ /></Z>
+            //console.log(this.props.orders.value[1])
+            return this.props.orders.value.map((order, index) =>
+            (<JSXZ in="index" sel=".table-line" key={index}>
+                <Z sel=".order_id" >{order["_yz_rk"]}</Z>
+                <Z sel=".full_name" >{order["custom.customer.full_name"][0]}</Z>
+                <Z sel=".billing_adress" >{order["custom.shipping_method"][0]}</Z>
+                <Z sel=".items" >{order["status.state"][0]}</Z>
+                <Z sel=".y-button" onClick={() => Delete(order["_yz_rk"])}><ChildrenZ /></Z>
+                <Z sel=".z-button" onClick={() => GoTo("order", order["_yz_rk"], '')}><ChildrenZ /></Z>
             </JSXZ>))
         }
     });
@@ -189,10 +232,10 @@ var Order = createReactClass(
             console.log("this.props : ")
             console.log(this.props)
             return <JSXZ in="order1" sel=".section-4">
-                <Z sel=".order_order_id">Order ID : {this.props.order.value.id}</Z>
-                <Z sel=".order_full_name">Full Name :{this.props.order.value.full_name}</Z>
-                <Z sel=".order_billing_adress">Billing Adress : {this.props.order.value.billing_address}</Z>
-                <Z sel=".order_items">Items : {this.props.order.value.items}</Z>
+                <Z sel=".order_order_id">Remote ID : {this.props.order.value[0]["_yz_rk"]}</Z>
+                <Z sel=".order_full_name">Full Name :{this.props.order.value[0]["custom.customer.full_name"][0]}</Z>
+                <Z sel=".order_billing_adress">Shipping Method: {this.props.order.value[0]["custom.shipping_method"][0]}</Z>
+                <Z sel=".order_items">Status State : {this.props.order.value[0]["status.state"][0]}</Z>
             </JSXZ>
         }
     });
@@ -290,11 +333,13 @@ function addRemoteProps(props) {
                 .filter((p) => p) // -> [[remoteProps.user], [remoteProps.orders]]
         )
 
+
         var remoteProps = remoteProps
             .map((spec_fun) => spec_fun(props)) // -> 1st call [{url: '/api/me', prop: 'user'}, undefined]
             // -> 2nd call [{url: '/api/me', prop: 'user'}, {url: '/api/orders?user_id=123', prop: 'orders'}]
             .filter((specs) => specs) // get rid of undefined from remoteProps that don't match their dependencies
             .filter((specs) => !props[specs.prop] || props[specs.prop].url != specs.url) // get rid of remoteProps already resolved with the url
+
         if (remoteProps.length == 0)
             return resolve(props)
 
@@ -323,7 +368,7 @@ function addRemoteProps(props) {
     })
 }
 
-function onPathChange() {  // fuonction qui va retourner les components à afficher pour le path courant
+function onPathChange(page = 0) {  // fuonction qui va retourner les components à afficher pour le path courant
 
     var path = location.pathname
     var qs = Qs.parse(location.search.slice(1))
@@ -332,8 +377,11 @@ function onPathChange() {  // fuonction qui va retourner les components à affic
         ...browserState, // Recupere les données de l'objet browser state
         path: path,
         qs: qs,
+        page: page,
         cookie: cookies
     }
+
+
     var route, routeProps
     //We try to match the requested path to one our our routes
     for (var key in routes) {
@@ -366,4 +414,5 @@ function onPathChange() {  // fuonction qui va retourner les components à affic
 }
 
 window.addEventListener("popstate", () => { onPathChange() })
+
 onPathChange()

@@ -1,0 +1,15 @@
+FROM basho/riak-kv
+#COPY ./etc/riak.conf /etc/riak/riak.conf
+RUN docker exec -it riak_member_1 bash
+RUN echo "search = on\n" >> /etc/riak/riak.conf
+RUN exit
+RUN docker container restart riak_member_1
+RUN docker exec -it riak_member_2 bash
+RUN echo "search = on\n" >> /etc/riak/riak.conf
+RUN exit
+RUN docker container restart riak_member_2
+RUN docker exec -it riak_coordinator_1 bash
+RUN echo "search = on\n" >> /etc/riak/riak.conf
+RUN exit
+RUN docker container restart riak_coordinator_1
+#RUN sed -i "s|search = off|search = on|g" /etc/riak.conf
