@@ -22,13 +22,7 @@ defmodule Server.Router do
 
         case response do
           [] ->
-            records =
-              (Server.Riak.search(
-                 "order_index",
-                 "*:*"
-               )
-               |> Enum.at(0)
-               |> elem(1))["docs"]
+            %{"response" => %{"docs" => records}} = Server.Riak.search("order_index", "*:*")
 
             send_resp(conn, 200, Poison.encode!(records))
 
@@ -44,21 +38,19 @@ defmodule Server.Router do
   get "/api/order" do
     case conn.params do
       %{} ->
-        content =
-          Server.Riak.search(
-            "order_index",
-            conn.params["query"],
-            elem(Integer.parse(conn.params["page"]), 0),
-            elem(Integer.parse(conn.params["rows"]), 0),
-            conn.params["sort"]
-          )
+        %{"query" => query, "page" => page, "rows" => rows, "sort" => sort} = conn.params
+        {page, _rest} = Integer.parse(page)
+        {rows, _rest} = Integer.parse(rows)
+        content = Server.Riak.search("order_index", query, page, rows, sort)
+        %{"responseHeader" => %{"status" => status}} = content
 
-        case (content |> Enum.at(1) |> elem(1))["status"] do
+        case status do
           0 ->
-            send_resp(conn, 200, Poison.encode!((content |> Enum.at(0) |> elem(1))["docs"]))
+            %{"response" => %{"docs" => docs}} = content
+            send_resp(conn, 200, Poison.encode!(docs))
 
-          status ->
-            send_resp(conn, status, Poison.encode!(content["error"]))
+          status_code ->
+            send_resp(conn, status_code, Poison.encode!(content["error"]))
         end
 
       _ ->
@@ -67,13 +59,7 @@ defmodule Server.Router do
   end
 
   get "/api/orders" do
-    records =
-      (Server.Riak.search(
-         "order_index",
-         "*:*"
-       )
-       |> Enum.at(0)
-       |> elem(1))["docs"]
+    %{"response" => %{"docs" => records}} = Server.Riak.search("order_index", "*:*")
 
     if length(records) == 0 do
       insert_orders()
@@ -81,21 +67,20 @@ defmodule Server.Router do
 
     case conn.params do
       %{} ->
-        content =
-          Server.Riak.search(
-            "order_index",
-            conn.params["query"],
-            elem(Integer.parse(conn.params["page"]), 0),
-            elem(Integer.parse(conn.params["rows"]), 0),
-            conn.params["sort"]
-          )
+        %{"query" => query, "page" => page, "rows" => rows, "sort" => sort} = conn.params
+        {page, _rest} = Integer.parse(page)
+        {rows, _rest} = Integer.parse(rows)
+        content = Server.Riak.search("order_index", query, page, rows, sort)
 
-        case (content |> Enum.at(1) |> elem(1))["status"] do
+        %{"responseHeader" => %{"status" => status}} = content
+
+        case status do
           0 ->
-            send_resp(conn, 200, Poison.encode!((content |> Enum.at(0) |> elem(1))["docs"]))
+            %{"response" => %{"docs" => docs}} = content
+            send_resp(conn, 200, Poison.encode!(docs))
 
-          status ->
-            send_resp(conn, status, Poison.encode!(content["error"]))
+          status_code ->
+            send_resp(conn, status_code, Poison.encode!(content["error"]))
         end
 
       _ ->

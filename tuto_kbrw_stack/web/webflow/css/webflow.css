@@ -2723,6 +2723,10 @@ textarea.w-input,textarea.w-select {
     text-align: center;
 }
 
+.selected {
+    color: #3265b1;
+}
+
 @font-face {
     font-family: 'Fa brands 400';
     src: url('https://uploads-ssl.webflow.com/6025062a97680e77aa7e3e66/602555a4103fa30740a66483_fa-brands-400.woff2') format('woff2'), url('https://uploads-ssl.webflow.com/6025062a97680e77aa7e3e66/602555a4827aa3715d62966c_fa-brands-400.eot') format('embedded-opentype'), url('https://uploads-ssl.webflow.com/6025062a97680e77aa7e3e66/602555a43c8ac015bc101504_fa-brands-400.woff') format('woff'), url('https://uploads-ssl.webflow.com/6025062a97680e77aa7e3e66/602555a4103fa31bf7a66482_fa-brands-400.ttf') format('truetype'), url('https://uploads-ssl.webflow.com/6025062a97680e77aa7e3e66/602555a466cdcc414152e841_fa-brands-400.svg') format('svg');

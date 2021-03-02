@@ -22,35 +22,6 @@ var GoTo = (route, params, query, page = 0) => {
     onPathChange(page)
 }
 
-var SetButtonColor = (page_nb) => {
-    if (page_nb == 0) {
-        document.getElementById("page-0").style.color = "blue";
-        document.getElementById("page-1").style.color = "black";
-        document.getElementById("page-2").style.color = "black";
-        document.getElementById("page-3").style.color = "black";
-    }
-    else if (page_nb == 1) {
-        document.getElementById("page-0").style.color = "black";
-        document.getElementById("page-1").style.color = "blue";
-        document.getElementById("page-2").style.color = "black";
-        document.getElementById("page-3").style.color = "black";
-    }
-    else if (page_nb == 2) {
-        document.getElementById("page-0").style.color = "black";
-        document.getElementById("page-1").style.color = "black";
-        document.getElementById("page-2").style.color = "blue";
-        document.getElementById("page-3").style.color = "black";
-    }
-    else if (page_nb == 3) {
-        document.getElementById("page-0").style.color = "black";
-        document.getElementById("page-1").style.color = "black";
-        document.getElementById("page-2").style.color = "black";
-        document.getElementById("page-3").style.color = "blue";
-    }
-
-
-}
-
 async function Delete(id) {
     var url = "/api/delete/order?id=" + id
     let response = await HTTP.delete(url)
@@ -61,16 +32,8 @@ async function Delete(id) {
 
 // remoteProps renvoie un tuple avec l'url qui sera utilisé par l'API et le  nom de la prop à récupérer
 var remoteProps = {
-    /*user: (props) => {
-        return {
-            url: "/api/me",
-            prop: "user"
-        }
-    },*/
     orders: (props) => {
-        //if (!props.user)
-        //return
-        var qs = { ...props.qs/*, user_id: props.user.value.id*/ }
+        var qs = { ...props.qs }
         var query = Qs.stringify(qs)
         var page = props.page
         return {
@@ -105,46 +68,7 @@ var cn = function () {
 
 var Layout = createReactClass(
     {
-        // permet d'afficher ou de cacher le component en fonction de notre state
-        // this.state va changer l'etat de modal, ici l'att modal
-        // spec ici designe le component Orders
-        // res le resultat de l'interac
-        //  on cache le modal
-        // on appel la func callback de spec avec res, ici 
-
-        /*getInitialState: function () {
-            return { modal: this.props.modal };
-        },
-        modal(spec) {
-            this.setState({
-                modal: {
-                    ...spec, callback: (res) => {
-                        this.setState({ modal: null }, () => {
-                            if (spec.callback) spec.callback(res)
-                        })
-                    }
-                }
-            })
-        },*/
         render() {
-            // on recupére notre component DeleteModal et on lui passe
-            // this.state.modal.type en props
-
-            // this.modal = la fonction
-            // this.state.modal = modal dans la fonction modal
-            /*var modal_component = {
-                'delete': (props) => <DeleteModal {...props} />
-            }[this.state.modal && this.state.modal.type];
-            modal_component = modal_component && modal_component(this.state.modal)
-
-            var props = {
-                ...this.props, modal: this.modal
-            }*/
-
-            /*<Z sel=".modal-wrapper" className={cn(classNameZ, { 'hidden': !modal_component })}>
-            {modal_component}
-            </Z>*/
-
             return <JSXZ in="index" sel=".layout" >
                 <Z sel=".layout-container">
                     <this.props.Child {...this.props} />
@@ -153,31 +77,14 @@ var Layout = createReactClass(
         }
     });
 
-
-/*var DeleteModal = createReactClass({
-    render() {
-        return <JSXZ in="index" sel=".modal-wrapper">
-            <Z sel=".field-label-2">
-                {this.props.message}
-            </Z>
-            <Z sel=".confirm-button-yes" onClick={() => { this.props.callback(true) }}>
-                Yes
-           </Z>
-            <Z sel=".confirm-button-no" onClick={() => { this.props.callback(false) }}>
-                No
-             </Z>
-        </JSXZ>
-    }
-})*/
-
 var Header = createReactClass(
     {
         render() {
             return <JSXZ in="index" sel=".header">
-                <Z sel=".page-0" onClick={() => { SetButtonColor(0); GoTo("orders", "", "") }}><ChildrenZ /></Z>
-                <Z sel=".page-1" onClick={() => { SetButtonColor(1); GoTo("orders", "", "", 1) }}><ChildrenZ /></Z>
-                <Z sel=".page-2" onClick={() => { SetButtonColor(2); GoTo("orders", "", "", 2) }}><ChildrenZ /></Z>
-                <Z sel=".page-3" onClick={() => { SetButtonColor(3); GoTo("orders", "", "", 3) }}><ChildrenZ /></Z>
+                <Z sel=".page-0" className={cn(classNameZ, { 'selected': this.props.page == 0 })} onClick={() => { GoTo("orders", "", "") }}><ChildrenZ /></Z>
+                <Z sel=".page-1" className={cn(classNameZ, { 'selected': this.props.page == 1 })} onClick={() => { GoTo("orders", "", "", 1) }}><ChildrenZ /></Z>
+                <Z sel=".page-2" className={cn(classNameZ, { 'selected': this.props.page == 2 })} onClick={() => { GoTo("orders", "", "", 2) }}><ChildrenZ /></Z>
+                <Z sel=".page-3" className={cn(classNameZ, { 'selected': this.props.page == 3 })} onClick={() => { GoTo("orders", "", "", 3) }}><ChildrenZ /></Z>
                 <Z sel=".orders">
                     <this.props.Child {...this.props} />
                 </Z>
@@ -185,28 +92,12 @@ var Header = createReactClass(
         }
     });
 
-/* <Z sel=".y-button" onClick={() => this.props.modal({
-     type: 'delete',
-     title: 'Order deletion',
-     message: `Are you sure you want to delete this ?`,
-     callback: (value) => {
-         //Do something with the return value
-         if (value) {
-             GoTo("orders", "", "del=" + order.id)
-         } else {
-             GoTo("orders", "")
-         }
-
-     }
- })}><ChildrenZ /></Z>*/
-
 var Orders = createReactClass(
     {
         statics: {
             remoteProps: [remoteProps.orders]
         },
         render() {
-            //console.log(this.props.orders.value[1])
             return this.props.orders.value.map((order, index) =>
             (<JSXZ in="index" sel=".table-line" key={index}>
                 <Z sel=".order_id" >{order["_yz_rk"]}</Z>
@@ -219,9 +110,6 @@ var Orders = createReactClass(
         }
     });
 
-//<Z sel=".y-button" onClick={() => GoTo("orders", "", "del=" + order.id)}><ChildrenZ /></Z>
-
-
 var Order = createReactClass(
     {
         statics: {
@@ -229,8 +117,6 @@ var Order = createReactClass(
         },
 
         render() {
-            console.log("this.props : ")
-            console.log(this.props)
             return <JSXZ in="order1" sel=".section-4">
                 <Z sel=".order_order_id">Remote ID : {this.props.order.value[0]["_yz_rk"]}</Z>
                 <Z sel=".order_full_name">Full Name :{this.props.order.value[0]["custom.customer.full_name"][0]}</Z>
@@ -343,7 +229,6 @@ function addRemoteProps(props) {
         if (remoteProps.length == 0)
             return resolve(props)
 
-
         // https://github.com/cujojs/when/blob/master/docs/api.md#whenmap
         // When.map permet de mettre la serie d'operation de la fonction map dans une Promise
 
@@ -400,11 +285,11 @@ function onPathChange(page = 0) {  // fuonction qui va retourner les components 
     if (!route)
         return ReactDOM.render(<ErrorPage message={"Not Found"} code={404} />, document.getElementById('root'))
 
-
     addRemoteProps(browserState).then(
         (props) => {
             browserState = props
             //Log our new browserState
+            console.log("browserState")
             console.log(browserState)
             //Render our components using our remote data
             ReactDOM.render(<Child {...browserState} />, document.getElementById('root'))
