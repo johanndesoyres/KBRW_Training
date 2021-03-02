@@ -1,5 +1,5 @@
-require('!!file-loader?name=[name].[ext]!./webflow/index.html')
-require('!!file-loader?name=[name].[ext]!./webflow/order1.html')
+require('!!file-loader?name=[name].[ext]!../webflow/order.html')
+require('!!file-loader?name=[name].[ext]!../webflow/order1.html')
 
 /* required library for our React app */
 var ReactDOM = require('react-dom')
@@ -9,20 +9,20 @@ var Qs = require('qs')
 var Cookie = require('cookie')
 var XMLHttpRequest = require("xhr2")
 var When = require('when')
-var $ = require("jquery");
+var localhost = require('reaxt/config').localhost
 
 
 /* required css for our application */
-require('./webflow/css/webflow.css');
+require('../webflow/css/webflow.css');
 
-var GoTo = (route, params, query, page = 0) => {
+/*var GoTo = (route, params, query, page = 0) => {
     //var qs = Qs.stringify(query)
     var url = routes[route].path(params) + ((query == '') ? '' : ('?' + query))
     history.pushState({}, "", url)
     onPathChange(page)
-}
+}*/
 
-var SetButtonColor = (page_nb) => {
+/*var SetButtonColor = (page_nb) => {
     if (page_nb == 0) {
         document.getElementById("page-0").style.color = "blue";
         document.getElementById("page-1").style.color = "black";
@@ -49,7 +49,7 @@ var SetButtonColor = (page_nb) => {
     }
 
 
-}
+}*/
 
 async function Delete(id) {
     var url = "/api/delete/order?id=" + id
@@ -145,7 +145,7 @@ var Layout = createReactClass(
             {modal_component}
             </Z>*/
 
-            return <JSXZ in="index" sel=".layout" >
+            return <JSXZ in="order" sel=".layout" >
                 <Z sel=".layout-container">
                     <this.props.Child {...this.props} />
                 </Z>
@@ -156,7 +156,7 @@ var Layout = createReactClass(
 
 /*var DeleteModal = createReactClass({
     render() {
-        return <JSXZ in="index" sel=".modal-wrapper">
+        return <JSXZ in="order" sel=".modal-wrapper">
             <Z sel=".field-label-2">
                 {this.props.message}
             </Z>
@@ -173,11 +173,11 @@ var Layout = createReactClass(
 var Header = createReactClass(
     {
         render() {
-            return <JSXZ in="index" sel=".header">
-                <Z sel=".page-0" onClick={() => { SetButtonColor(0); GoTo("orders", "", "") }}><ChildrenZ /></Z>
-                <Z sel=".page-1" onClick={() => { SetButtonColor(1); GoTo("orders", "", "", 1) }}><ChildrenZ /></Z>
-                <Z sel=".page-2" onClick={() => { SetButtonColor(2); GoTo("orders", "", "", 2) }}><ChildrenZ /></Z>
-                <Z sel=".page-3" onClick={() => { SetButtonColor(3); GoTo("orders", "", "", 3) }}><ChildrenZ /></Z>
+            return <JSXZ in="order" sel=".header">
+                {/* <Z sel=".page-0" onClick={() => { SetButtonColor(0); this.props.Link.GoTo("orders", "", "") }}><ChildrenZ /></Z>
+                <Z sel=".page-1" onClick={() => { SetButtonColor(1); this.props.Link.GoTo("orders", "", "", 1) }}><ChildrenZ /></Z>
+                <Z sel=".page-2" onClick={() => { SetButtonColor(2); this.props.Link.GoTo("orders", "", "", 2) }}><ChildrenZ /></Z>
+                <Z sel=".page-3" onClick={() => { SetButtonColor(3); this.props.Link.GoTo("orders", "", "", 3) }}><ChildrenZ /></Z> */}
                 <Z sel=".orders">
                     <this.props.Child {...this.props} />
                 </Z>
@@ -208,13 +208,13 @@ var Orders = createReactClass(
         render() {
             //console.log(this.props.orders.value[1])
             return this.props.orders.value.map((order, index) =>
-            (<JSXZ in="index" sel=".table-line" key={index}>
+            (<JSXZ in="order" sel=".table-line" key={index}>
                 <Z sel=".order_id" >{order["_yz_rk"]}</Z>
                 <Z sel=".full_name" >{order["custom.customer.full_name"][0]}</Z>
                 <Z sel=".billing_adress" >{order["custom.shipping_method"][0]}</Z>
                 <Z sel=".items" >{order["status.state"][0]}</Z>
                 <Z sel=".y-button" onClick={() => Delete(order["_yz_rk"])}><ChildrenZ /></Z>
-                <Z sel=".z-button" onClick={() => GoTo("order", order["_yz_rk"], '')}><ChildrenZ /></Z>
+                <Z sel=".z-button" onClick={() => this.props.Link.GoTo("order", order["_yz_rk"], '')}><ChildrenZ /></Z>
             </JSXZ>))
         }
     });
@@ -250,6 +250,7 @@ var HTTP = new (function () {
 
     this.req = (method, url, data) => new Promise((resolve, reject) => {
         var req = new XMLHttpRequest()
+        url = (typeof window !== 'undefined') ? url : localhost + url
         console.log("URL :")
         console.log(url)
         req.open(method, url)  // initialisation de la requete
@@ -308,7 +309,7 @@ var ErrorPage = createReactClass({
     render() {
         console.log("ErrorPage")
         console.log(this)
-        return <JSXZ in="index" sel=".section">
+        return <JSXZ in="order" sel=".section">
             <Z sel=".error">{this.props.message} : {this.props.code}</Z>
         </JSXZ>
     }
@@ -368,7 +369,7 @@ function addRemoteProps(props) {
     })
 }
 
-function onPathChange(page = 0) {  // fuonction qui va retourner les components à afficher pour le path courant
+/*function onPathChange(page = 0) {  // fuonction qui va retourner les components à afficher pour le path courant
 
     var path = location.pathname
     var qs = Qs.parse(location.search.slice(1))
@@ -411,8 +412,100 @@ function onPathChange(page = 0) {  // fuonction qui va retourner les components 
         }, (res) => {
             ReactDOM.render(<ErrorPage message={"Shit happened"} code={res.http_code} />, document.getElementById('root'))
         })
+}*/
+
+
+var browserState = {}
+
+function inferPropsChange(path, query, cookies) { // the second part of the onPathChange function have been moved here
+    browserState = {
+        ...browserState,
+        path: path, qs: query, page: page,
+        Link: Link,
+        Child: Child
+    }
+
+    var route, routeProps
+    for (var key in routes) {
+        routeProps = routes[key].match(path, query)
+        if (routeProps) {
+            route = key
+            break
+        }
+    }
+
+    if (!route) {
+        return new Promise((res, reject) => reject({ http_code: 404 }))
+    }
+    browserState = {
+        ...browserState,
+        ...routeProps,
+        route: route
+    }
+
+    return addRemoteProps(browserState).then(
+        (props) => {
+            browserState = props
+        })
 }
 
-window.addEventListener("popstate", () => { onPathChange() })
+var Link = createReactClass({
+    statics: {
+        renderFunc: null, //render function to use (differently set depending if we are server sided or client sided)
+        GoTo(route, params, query, page = 0) {// function used to change the path of our browser
+            var path = routes[route].path(params)
+            //var qs = Qs.stringify(query)
+            var url = path + (qs == '' ? '' : '?' + qs)
+            history.pushState({}, "", url)
+            Link.onPathChange(page)
+        },
+        onPathChange(page = 0) { //Updated onPathChange
+            var path = location.pathname
+            var qs = Qs.parse(location.search.slice(1))
+            var cookies = Cookie.parse(document.cookie)
+            inferPropsChange(path, qs, cookies, page).then( //inferPropsChange download the new props if the url query changed as done previously
+                () => {
+                    Link.renderFunc(<Child {...browserState} />) //if we are on server side we render 
+                }, ({ http_code }) => {
+                    Link.renderFunc(<ErrorPage message={"Not Found"} code={http_code} />, http_code) //idem
+                }
+            )
+        },
+        LinkTo: (route, params, query) => {
+            var qs = Qs.stringify(query)
+            return routes[route].path(params) + ((qs == '') ? '' : ('?' + qs))
+        }
+    },
+    onClick(ev) {
+        ev.preventDefault();
+        Link.GoTo(this.props.to, this.props.params, this.props.query);
+    },
+    render() {//render a <Link> this way transform link into href path which allows on browser without javascript to work perfectly on the website
+        return (
+            <a href={Link.LinkTo(this.props.to, this.props.params, this.props.query)} onClick={this.onClick}>
+                {this.props.children}
+            </a>
+        )
+    }
+})
 
-onPathChange()
+//window.addEventListener("popstate", () => { onPathChange() })
+
+//onPathChange()
+
+module.exports = {
+    reaxt_server_render(params, render) {
+        inferPropsChange(params.path, params.query, params.cookies)
+            .then(() => {
+                render(<Child {...browserState} />)
+            }, (err) => {
+                render(<ErrorPage message={"Not Found :" + err.url} code={err.http_code} />, err.http_code)
+            })
+    },
+    reaxt_client_render(initialProps, render) {
+        browserState = initialProps
+        Link.renderFunc = render
+        window.addEventListener("popstate", () => { Link.onPathChange() })
+        Link.onPathChange()
+    }
+}

@@ -1,14 +1,16 @@
 defmodule Server.Router do
   use Plug.Router
 
-  plug(Plug.Static, from: "priv/static", at: "/static")
-  plug(Plug.Static, from: "priv/static", at: "/order/static")
-
+  # plug(Plug.Static, from: "priv/static", at: "/static")
+  # plug(Plug.Static, from: "priv/static", at: "/order/static")
+  plug(Plug.Static, at: "/public", from: :tuto_kbrw_stack)
   import Plug.Conn
-
   plug(:fetch_query_params)
   plug(:match)
   plug(:dispatch)
+
+  require EEx
+  EEx.function_from_file(:defp, :layout, "web/layout.html.eex", [:render])
 
   def insert_orders() do
     :inets.start()
@@ -22,13 +24,7 @@ defmodule Server.Router do
 
         case response do
           [] ->
-            records =
-              (Server.Riak.search(
-                 "order_index",
-                 "*:*"
-               )
-               |> Enum.at(0)
-               |> elem(1))["docs"]
+            [{_, %{"docs" => records}}, _ | _tail] = Server.Riak.search("order_index", "*:*")
 
             send_resp(conn, 200, Poison.encode!(records))
 
@@ -44,18 +40,15 @@ defmodule Server.Router do
   get "/api/order" do
     case conn.params do
       %{} ->
-        content =
-          Server.Riak.search(
-            "order_index",
-            conn.params["query"],
-            elem(Integer.parse(conn.params["page"]), 0),
-            elem(Integer.parse(conn.params["rows"]), 0),
-            conn.params["sort"]
-          )
+        %{"query" => query, "page" => page, "rows" => rows, "sort" => sort} = conn.params
+        {page, _rest} = Integer.parse(page, 0)
+        {rows, _rest} = Integer.parse(rows, 0)
+        content = Server.Riak.search("order_index", query, page, rows, sort)
+        [{_, %{"docs" => docs}}, {_, %{"status" => status}} | _tail] = content
 
-        case (content |> Enum.at(1) |> elem(1))["status"] do
+        case status do
           0 ->
-            send_resp(conn, 200, Poison.encode!((content |> Enum.at(0) |> elem(1))["docs"]))
+            send_resp(conn, 200, Poison.encode!(docs))
 
           status ->
             send_resp(conn, status, Poison.encode!(content["error"]))
@@ -67,13 +60,7 @@ defmodule Server.Router do
   end
 
   get "/api/orders" do
-    records =
-      (Server.Riak.search(
-         "order_index",
-         "*:*"
-       )
-       |> Enum.at(0)
-       |> elem(1))["docs"]
+    [{_, %{"docs" => records}}, _ | _tail] = Server.Riak.search("order_index", "*:*")
 
     if length(records) == 0 do
       insert_orders()
@@ -81,18 +68,16 @@ defmodule Server.Router do
 
     case conn.params do
       %{} ->
-        content =
-          Server.Riak.search(
-            "order_index",
-            conn.params["query"],
-            elem(Integer.parse(conn.params["page"]), 0),
-            elem(Integer.parse(conn.params["rows"]), 0),
-            conn.params["sort"]
-          )
+        %{"query" => query, "page" => page, "rows" => rows, "sort" => sort} = conn.params
+        {page, _rest} = Integer.parse(page, 0)
+        {rows, _rest} = Integer.parse(rows, 0)
+        content = Server.Riak.search("order_index", query, page, rows, sort)
 
-        case (content |> Enum.at(1) |> elem(1))["status"] do
+        [{_, %{"docs" => docs}}, {_, %{"status" => status}} | _tail] = content
+
+        case status do
           0 ->
-            send_resp(conn, 200, Poison.encode!((content |> Enum.at(0) |> elem(1))["docs"]))
+            send_resp(conn, 200, Poison.encode!(docs))
 
           status ->
             send_resp(conn, status, Poison.encode!(content["error"]))
@@ -103,8 +88,25 @@ defmodule Server.Router do
     end
   end
 
+  # get _ do
+  # send_file(conn, 200, "priv/static/index.html")
+  # end
+
   get _ do
-    send_file(conn, 200, "priv/static/index.html")
+    conn = fetch_query_params(conn)
+
+    render =
+      Reaxt.render!(
+        :app,
+        %{path: conn.request_path, cookies: conn.cookies, query: conn.params},
+        30_000
+      )
+
+    send_resp(
+      put_resp_header(conn, "content-type", "text/html;charset=utf-8"),
+      render.param || 200,
+      layout(render)
+    )
   end
 
   match _ do
