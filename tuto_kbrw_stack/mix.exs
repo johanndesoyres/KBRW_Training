@@ -23,7 +23,9 @@ defmodule TutoKbrwStack.MixProject do
   defp deps do
     [
       {:plug_cowboy, "~> 2.4.1"},
-      {:poison, "~> 4.0.1"}
+      {:poison, "~> 4.0.1"},
+      {:rulex, git: "https://github.com/kbrw/rulex.git"},
+      {:exfsm, git: "https://github.com/kbrw/exfsm.git"}
     ]
   end
 end
