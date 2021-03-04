@@ -9,7 +9,6 @@ defimpl ExFSM.Machine.State, for: Map do
 
   def handlers(order) do
     {fsm, _} = Rules.apply_rules(order, [])
-    IO.inspect(fsm)
     fsm
   end
 end

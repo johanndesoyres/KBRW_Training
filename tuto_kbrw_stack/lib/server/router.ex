@@ -7,12 +7,29 @@ defmodule Server.Router do
   import Plug.Conn
 
   plug(:fetch_query_params)
+  plug(Plug.Parsers, parsers: [:json], json_decoder: Poison)
   plug(:match)
   plug(:dispatch)
 
   def insert_orders() do
     :inets.start()
     JsonLoader.load_to_riak_v2("../orders_dump/orders_chunk0.json")
+  end
+
+  post "/api/pay/order" do
+    case conn.body_params do
+      %{"_json" => id} ->
+        response = Pay.process_payment(id)
+        Pay.stop(id)
+
+        case response do
+          :action_unavailable -> send_resp(conn, 500, Poison.encode!(%{"msg" => response}))
+          _ -> send_resp(conn, 200, Poison.encode!(response))
+        end
+
+      _ ->
+        send_resp(conn, 500, Poison.encode!(%{"msg" => "Error"}))
+    end
   end
 
   delete "/api/delete/order" do
@@ -68,6 +85,7 @@ defmodule Server.Router do
     case conn.params do
       %{} ->
         %{"query" => query, "page" => page, "rows" => rows, "sort" => sort} = conn.params
+
         {page, _rest} = Integer.parse(page)
         {rows, _rest} = Integer.parse(rows)
         content = Server.Riak.search("order_index", query, page, rows, sort)

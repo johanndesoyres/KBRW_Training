@@ -11,7 +11,6 @@ var XMLHttpRequest = require("xhr2")
 var When = require('when')
 var $ = require("jquery");
 
-
 /* required css for our application */
 require('./webflow/css/webflow.css');
 
@@ -29,6 +28,17 @@ async function Delete(id) {
 }
 
 
+async function Pay(id) {
+    var url = "/api/pay/order"
+    let response = await HTTP.post(url, id)
+    console.dir(response)
+    if (!("msg" in response)) {
+        delete browserState.orders
+        GoTo("orders", "", "")
+    }
+}
+
+
 
 // remoteProps renvoie un tuple avec l'url qui sera utilisé par l'API et le  nom de la prop à récupérer
 var remoteProps = {
@@ -37,7 +47,7 @@ var remoteProps = {
         var query = Qs.stringify(qs)
         var page = props.page
         return {
-            url: "/api/orders" + (query == '' ? '?page=' + page + '&rows=30&query=*:*&sort=creation_date_index' : '?' + 'page=0&rows=30&' + query.replaceAll("%3D", ":").replaceAll("%26", "&") + '&sort=creation_date_index'),
+            url: "/api/orders" + (query == '' ? '?page=' + page + '&rows=30&query=*:*&sort=creation_date_index' : '?page=0&rows=30&' + query.replaceAll("%3D", ":").replaceAll("%26", "&") + '&sort=creation_date_index'),
             prop: "orders"
         }
     },
@@ -91,12 +101,20 @@ var Header = createReactClass(
             </JSXZ>
         }
     });
-
+//order["status"]["state"]
 var Orders = createReactClass(
     {
         statics: {
             remoteProps: [remoteProps.orders]
         },
+        /*processTransaction(orderid) {
+            HTTP.post("/api/pay/order", orderid).then((res) => {
+                console.log(res)
+                window.location.reload();
+            }).catch(() => {
+                alert("toto")
+            })
+        },*/
         render() {
             return this.props.orders.value.map((order, index) =>
             (<JSXZ in="index" sel=".table-line" key={index}>
@@ -106,6 +124,7 @@ var Orders = createReactClass(
                 <Z sel=".items" >{order["status.state"][0]}</Z>
                 <Z sel=".y-button" onClick={() => Delete(order["_yz_rk"])}><ChildrenZ /></Z>
                 <Z sel=".z-button" onClick={() => GoTo("order", order["_yz_rk"], '')}><ChildrenZ /></Z>
+                <Z sel=".x-button" onClick={() => Pay(order["_yz_rk"])}><ChildrenZ /></Z>
             </JSXZ>))
         }
     });
@@ -226,6 +245,7 @@ function addRemoteProps(props) {
             .filter((specs) => specs) // get rid of undefined from remoteProps that don't match their dependencies
             .filter((specs) => !props[specs.prop] || props[specs.prop].url != specs.url) // get rid of remoteProps already resolved with the url
 
+
         if (remoteProps.length == 0)
             return resolve(props)
 
@@ -254,7 +274,6 @@ function addRemoteProps(props) {
 }
 
 function onPathChange(page = 0) {  // fuonction qui va retourner les components à afficher pour le path courant
-
     var path = location.pathname
     var qs = Qs.parse(location.search.slice(1))
     var cookies = Cookie.parse(document.cookie)
@@ -266,7 +285,6 @@ function onPathChange(page = 0) {  // fuonction qui va retourner les components 
         cookie: cookies
     }
 
-
     var route, routeProps
     //We try to match the requested path to one our our routes
     for (var key in routes) {
@@ -276,6 +294,7 @@ function onPathChange(page = 0) {  // fuonction qui va retourner les components 
             break;
         }
     }
+
     browserState = {     // on remplit le browser state avec nos données
         ...browserState,
         ...routeProps,
@@ -285,14 +304,19 @@ function onPathChange(page = 0) {  // fuonction qui va retourner les components 
     if (!route)
         return ReactDOM.render(<ErrorPage message={"Not Found"} code={404} />, document.getElementById('root'))
 
-    addRemoteProps(browserState).then(
+
+    //var { orders, ...newBrowserState } = browserState;
+    //console.log("newBrowserState avant remoteProps")
+    //console.log(newBrowserState)
+
+    addRemoteProps(newBrowserState).then(
         (props) => {
-            browserState = props
+            newBrowserState = props
             //Log our new browserState
-            console.log("browserState")
-            console.log(browserState)
+            console.log("newBrowserState")
+            console.log(newBrowserState)
             //Render our components using our remote data
-            ReactDOM.render(<Child {...browserState} />, document.getElementById('root'))
+            ReactDOM.render(<Child {...newBrowserState} />, document.getElementById('root'))
         }, (res) => {
             ReactDOM.render(<ErrorPage message={"Shit happened"} code={res.http_code} />, document.getElementById('root'))
         })

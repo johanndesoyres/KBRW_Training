@@ -334,6 +334,22 @@ input.z-button {
     -webkit-appearance: button
 }
 
+.x-button {
+    display: inline-block;
+    padding: 9px 15px;
+    background-color: #3898EC;
+    color: white;
+    border: 0;
+    line-height: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 0
+}
+
+input.x-button {
+    -webkit-appearance: button
+}
+
 html[data-w-dynpage] [data-w-cloak] {
     color: transparent !important
 }
@@ -2382,10 +2398,13 @@ textarea.w-input,textarea.w-select {
     text-align: center;
 }
 
+
+
 .div-block-2 {
     margin-top: -10px;
     padding-top: 21px;
     border: 1px solid #000;
+    text-align: center;
 }
 
 .text-span-2 {
@@ -2453,7 +2472,8 @@ textarea.w-input,textarea.w-select {
 
 .delete-button {
     margin-top: 19px;
-    margin-left: 51px;
+    margin-left: 0px;
+    float: none;
     background-color: transparent;
     box-shadow: 1px 1px 3px 0 transparent;
     -webkit-transition: opacity 200ms ease;
@@ -2464,7 +2484,20 @@ textarea.w-input,textarea.w-select {
 
 .details-button {
     margin-top: 19px;
-    margin-left: 51px;
+    margin-left: 0px;
+    float: none;
+    background-color: transparent;
+    box-shadow: 1px 1px 3px 0 transparent;
+    -webkit-transition: opacity 200ms ease;
+    transition: opacity 200ms ease;
+    color: #000;
+    text-align: left;
+}
+
+.pay-button {
+    margin-top: 19px;
+    margin-left: 0px;
+    float: none;
     background-color: transparent;
     box-shadow: 1px 1px 3px 0 transparent;
     -webkit-transition: opacity 200ms ease;
@@ -2476,6 +2509,8 @@ textarea.w-input,textarea.w-select {
 .text-span-6 {
     font-family: 'Fa solid 900', sans-serif;
     font-size: 40px;
+    -o-object-fit: fill;
+    object-fit: fill;
 }
 
 .utility-page-wrap {
