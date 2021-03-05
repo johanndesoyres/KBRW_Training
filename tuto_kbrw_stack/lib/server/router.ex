@@ -23,8 +23,17 @@ defmodule Server.Router do
         Pay.stop(id)
 
         case response do
-          :action_unavailable -> send_resp(conn, 500, Poison.encode!(%{"msg" => response}))
-          _ -> send_resp(conn, 200, Poison.encode!(response))
+          :action_unavailable ->
+            send_resp(conn, 500, Poison.encode!(%{"msg" => response}))
+
+          _ ->
+            # Because Riak is too slow in my computer
+            Server.Riak.search("order_index", "*:*")
+            # Because Riak is too slow in my computer
+            :timer.sleep(1000)
+            %{"response" => %{"docs" => records}} = Server.Riak.search("order_index", "*:*")
+
+            send_resp(conn, 200, Poison.encode!(records))
         end
 
       _ ->
@@ -39,12 +48,16 @@ defmodule Server.Router do
 
         case response do
           [] ->
+            # Because Riak is too slow in my computer
+            Server.Riak.search("order_index", "*:*")
+            # Because Riak is too slow in my computer
+            :timer.sleep(1000)
             %{"response" => %{"docs" => records}} = Server.Riak.search("order_index", "*:*")
 
             send_resp(conn, 200, Poison.encode!(records))
 
           _ ->
-            send_resp(conn, 500, response)
+            send_resp(conn, 500, Poison.encode!(%{"msg" => response}))
         end
 
       _ ->

@@ -21,24 +21,6 @@ var GoTo = (route, params, query, page = 0) => {
     onPathChange(page)
 }
 
-async function Delete(id) {
-    var url = "/api/delete/order?id=" + id
-    let response = await HTTP.delete(url)
-    GoTo("orders", "", "")
-}
-
-
-async function Pay(id) {
-    var url = "/api/pay/order"
-    let response = await HTTP.post(url, id)
-    console.dir(response)
-    if (!("msg" in response)) {
-        delete browserState.orders
-        GoTo("orders", "", "")
-    }
-}
-
-
 
 // remoteProps renvoie un tuple avec l'url qui sera utilisé par l'API et le  nom de la prop à récupérer
 var remoteProps = {
@@ -101,30 +83,46 @@ var Header = createReactClass(
             </JSXZ>
         }
     });
-//order["status"]["state"]
+
 var Orders = createReactClass(
     {
         statics: {
             remoteProps: [remoteProps.orders]
         },
-        /*processTransaction(orderid) {
-            HTTP.post("/api/pay/order", orderid).then((res) => {
-                console.log(res)
-                window.location.reload();
-            }).catch(() => {
-                alert("toto")
+        getInitialState: function () {
+            return { orders: this.props.orders.value };
+        },
+        Pay(id) {
+            var url = "/api/pay/order"
+            HTTP.post(url, id).then((res) => {
+                if (!("msg" in res)) {
+                    this.setState({
+                        orders: res
+                    });
+                }
             })
-        },*/
+        },
+        Delete(id) {
+            var url = "/api/delete/order?id=" + id
+            HTTP.delete(url).then((res) => {
+                if (!("msg" in res)) {
+                    this.setState({
+                        orders: res
+                    });
+                }
+            })
+        },
         render() {
-            return this.props.orders.value.map((order, index) =>
+            return this.state.orders.map((order, index) =>
             (<JSXZ in="index" sel=".table-line" key={index}>
                 <Z sel=".order_id" >{order["_yz_rk"]}</Z>
                 <Z sel=".full_name" >{order["custom.customer.full_name"][0]}</Z>
                 <Z sel=".billing_adress" >{order["custom.shipping_method"][0]}</Z>
                 <Z sel=".items" >{order["status.state"][0]}</Z>
-                <Z sel=".y-button" onClick={() => Delete(order["_yz_rk"])}><ChildrenZ /></Z>
+                <Z sel=".y-button" onClick={() => this.Delete(order["_yz_rk"])}><ChildrenZ /></Z>
                 <Z sel=".z-button" onClick={() => GoTo("order", order["_yz_rk"], '')}><ChildrenZ /></Z>
-                <Z sel=".x-button" onClick={() => Pay(order["_yz_rk"])}><ChildrenZ /></Z>
+                <Z sel=".x-button" onClick={() => this.Pay(order["_yz_rk"])}>{ }<ChildrenZ /></Z>
+                <Z sel=".text-block-3" >Status : {order["status.state"][0]} <br />Payment method : delivery</Z>
             </JSXZ>))
         }
     });
@@ -309,14 +307,14 @@ function onPathChange(page = 0) {  // fuonction qui va retourner les components 
     //console.log("newBrowserState avant remoteProps")
     //console.log(newBrowserState)
 
-    addRemoteProps(newBrowserState).then(
+    addRemoteProps(browserState).then(
         (props) => {
-            newBrowserState = props
+            browserState = props
             //Log our new browserState
             console.log("newBrowserState")
-            console.log(newBrowserState)
+            console.log(browserState)
             //Render our components using our remote data
-            ReactDOM.render(<Child {...newBrowserState} />, document.getElementById('root'))
+            ReactDOM.render(<Child {...browserState} />, document.getElementById('root'))
         }, (res) => {
             ReactDOM.render(<ErrorPage message={"Shit happened"} code={res.http_code} />, document.getElementById('root'))
         })
