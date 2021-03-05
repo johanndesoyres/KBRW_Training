@@ -11,7 +11,6 @@ var XMLHttpRequest = require("xhr2")
 var When = require('when')
 var $ = require("jquery");
 
-
 /* required css for our application */
 require('./webflow/css/webflow.css');
 
@@ -22,13 +21,6 @@ var GoTo = (route, params, query, page = 0) => {
     onPathChange(page)
 }
 
-async function Delete(id) {
-    var url = "/api/delete/order?id=" + id
-    let response = await HTTP.delete(url)
-    GoTo("orders", "", "")
-}
-
-
 
 // remoteProps renvoie un tuple avec l'url qui sera utilisé par l'API et le  nom de la prop à récupérer
 var remoteProps = {
@@ -37,7 +29,7 @@ var remoteProps = {
         var query = Qs.stringify(qs)
         var page = props.page
         return {
-            url: "/api/orders" + (query == '' ? '?page=' + page + '&rows=30&query=*:*&sort=creation_date_index' : '?' + 'page=0&rows=30&' + query.replaceAll("%3D", ":").replaceAll("%26", "&") + '&sort=creation_date_index'),
+            url: "/api/orders" + (query == '' ? '?page=' + page + '&rows=30&query=*:*&sort=creation_date_index' : '?page=0&rows=30&' + query.replaceAll("%3D", ":").replaceAll("%26", "&") + '&sort=creation_date_index'),
             prop: "orders"
         }
     },
@@ -97,15 +89,40 @@ var Orders = createReactClass(
         statics: {
             remoteProps: [remoteProps.orders]
         },
+        getInitialState: function () {
+            return { orders: this.props.orders.value };
+        },
+        Pay(id) {
+            var url = "/api/pay/order"
+            HTTP.post(url, id).then((res) => {
+                if (!("msg" in res)) {
+                    this.setState({
+                        orders: res
+                    });
+                }
+            })
+        },
+        Delete(id) {
+            var url = "/api/delete/order?id=" + id
+            HTTP.delete(url).then((res) => {
+                if (!("msg" in res)) {
+                    this.setState({
+                        orders: res
+                    });
+                }
+            })
+        },
         render() {
-            return this.props.orders.value.map((order, index) =>
+            return this.state.orders.map((order, index) =>
             (<JSXZ in="index" sel=".table-line" key={index}>
                 <Z sel=".order_id" >{order["_yz_rk"]}</Z>
                 <Z sel=".full_name" >{order["custom.customer.full_name"][0]}</Z>
                 <Z sel=".billing_adress" >{order["custom.shipping_method"][0]}</Z>
                 <Z sel=".items" >{order["status.state"][0]}</Z>
-                <Z sel=".y-button" onClick={() => Delete(order["_yz_rk"])}><ChildrenZ /></Z>
+                <Z sel=".y-button" onClick={() => this.Delete(order["_yz_rk"])}><ChildrenZ /></Z>
                 <Z sel=".z-button" onClick={() => GoTo("order", order["_yz_rk"], '')}><ChildrenZ /></Z>
+                <Z sel=".x-button" onClick={() => this.Pay(order["_yz_rk"])}>{ }<ChildrenZ /></Z>
+                <Z sel=".text-block-3" >Status : {order["status.state"][0]} <br />Payment method : delivery</Z>
             </JSXZ>))
         }
     });
@@ -226,6 +243,7 @@ function addRemoteProps(props) {
             .filter((specs) => specs) // get rid of undefined from remoteProps that don't match their dependencies
             .filter((specs) => !props[specs.prop] || props[specs.prop].url != specs.url) // get rid of remoteProps already resolved with the url
 
+
         if (remoteProps.length == 0)
             return resolve(props)
 
@@ -254,7 +272,6 @@ function addRemoteProps(props) {
 }
 
 function onPathChange(page = 0) {  // fuonction qui va retourner les components à afficher pour le path courant
-
     var path = location.pathname
     var qs = Qs.parse(location.search.slice(1))
     var cookies = Cookie.parse(document.cookie)
@@ -266,7 +283,6 @@ function onPathChange(page = 0) {  // fuonction qui va retourner les components 
         cookie: cookies
     }
 
-
     var route, routeProps
     //We try to match the requested path to one our our routes
     for (var key in routes) {
@@ -276,6 +292,7 @@ function onPathChange(page = 0) {  // fuonction qui va retourner les components 
             break;
         }
     }
+
     browserState = {     // on remplit le browser state avec nos données
         ...browserState,
         ...routeProps,
@@ -285,11 +302,16 @@ function onPathChange(page = 0) {  // fuonction qui va retourner les components 
     if (!route)
         return ReactDOM.render(<ErrorPage message={"Not Found"} code={404} />, document.getElementById('root'))
 
+
+    //var { orders, ...newBrowserState } = browserState;
+    //console.log("newBrowserState avant remoteProps")
+    //console.log(newBrowserState)
+
     addRemoteProps(browserState).then(
         (props) => {
             browserState = props
             //Log our new browserState
-            console.log("browserState")
+            console.log("newBrowserState")
             console.log(browserState)
             //Render our components using our remote data
             ReactDOM.render(<Child {...browserState} />, document.getElementById('root'))
