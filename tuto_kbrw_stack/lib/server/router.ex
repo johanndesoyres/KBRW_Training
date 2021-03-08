@@ -98,7 +98,6 @@ defmodule Server.Router do
     case conn.params do
       %{} ->
         %{"query" => query, "page" => page, "rows" => rows, "sort" => sort} = conn.params
-
         {page, _rest} = Integer.parse(page)
         {rows, _rest} = Integer.parse(rows)
         content = Server.Riak.search("order_index", query, page, rows, sort)

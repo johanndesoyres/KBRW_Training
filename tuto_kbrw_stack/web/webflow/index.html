@@ -24,6 +24,34 @@
 <body class="body">
     <div id="root" class="root">
         <div class="layout">
+            <div class="modal-wrapper hidden">
+                <div class="modal-content">
+                    <div class="form-block-2 w-form">
+                        <form id="email-form" name="email-form" data-name="Email Form" class="form-3"><label for="email"
+                                class="field-label-2">Are you sure to do this<br /><br /> deletion
+                                ?</label></form>
+                        <div class="w-form-done">
+                            <div>Thank you! Your submission has been received!</div>
+                        </div>
+                        <div class="w-form-fail">
+                            <div>Oops! Something went wrong while submitting the form.</div>
+                        </div>
+                    </div>
+                    <div><a class="confirm-button-yes w-button">Yes</a><a class="confirm-button-no w-button">No</a>
+                    </div>
+                </div>
+            </div>
+            <div class="loader-wrapper hidden">
+                <div class="loader-content">
+                    <img src="https://uploads-ssl.webflow.com/6025062a97680e77aa7e3e66/60461b007a823a042f352b3b_Spinner-1s-200px.gif"
+                        loading="lazy" alt="" />
+                    <div class="loader-div">
+                        <div class="text-block-8"><br /><br /><br /><strong>Data loading, please wait...</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="hidden"></div>
             <div class="layout-container">
                 <div class="header">
                     <div class="div-block">
@@ -40,7 +68,7 @@
                         <div class="form-block w-form">
                             <form id="email-form" name="email-form" data-name="Email Form" class="form-2"><input
                                     type="text" class="text-field w-input" maxlength="256" name="query"
-                                    data-name="Query" placeholder="" id="query" /><input type="submit" value="Submit"
+                                    data-name="Query" placeholder="" id="query" /><input type="submit" value="Send"
                                     data-wait="Please wait..." class="submit-button w-button" /></form>
                             <div class="w-form-done">
                                 <div>Thank you! Your submission has been received!</div>
@@ -84,31 +112,12 @@
                                             class="text-span-6"></span></a></div>
                                 <div class="div-block-2">
                                     <a class="pay-button x-button"><span class="text-span-6"></span></a>
-                                    <div class="text-block-3">Status :  init<br />Payment method : delivery</div>
+                                    <!--<div class="text-block-3">Status :  init<br />Payment method : delivery</div>-->
                                 </div>
                             </div>
                         </section>
                     </div>
                 </div>
-                <div class="modal-wrapper hidden">
-                    <div class="modal-content">
-                        <div class="form-block-2 w-form">
-                            <form id="email-form" name="email-form" data-name="Email Form" class="form-3"><label
-                                    for="email" class="field-label-2">Are you sure to do this<br /><br /> deletion
-                                    ?</label></form>
-                            <div class="w-form-done">
-                                <div>Thank you! Your submission has been received!</div>
-                            </div>
-                            <div class="w-form-fail">
-                                <div>Oops! Something went wrong while submitting the form.</div>
-                            </div>
-                        </div>
-                        <div><a href="#" class="confirm-button-yes w-button">Yes</a><a href="#"
-                                class="confirm-button-no w-button">No</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="hidden"></div>
             </div>
         </div>
     </div>

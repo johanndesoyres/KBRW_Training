@@ -2374,7 +2374,7 @@ textarea.w-input,textarea.w-select {
     grid-template-areas: "Area Area-2 . . . . Area-4" "Area . . . . Area-3 .";
     -ms-grid-columns: 1fr 0px 1fr 0px 1fr 0px 1fr 0px 1fr 0px 1fr 0px 1fr;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-    border: 0px solid #000;
+    border: 1px solid #000;
 }
 
 .heading-3 {
@@ -2403,7 +2403,7 @@ textarea.w-input,textarea.w-select {
 .div-block-2 {
     margin-top: -10px;
     padding-top: 21px;
-    border: 1px solid #000;
+    border: 0px solid #000;
     text-align: center;
 }
 
@@ -2471,7 +2471,7 @@ textarea.w-input,textarea.w-select {
 }
 
 .delete-button {
-    margin-top: 19px;
+    margin-top: 0px;
     margin-left: 0px;
     float: none;
     background-color: transparent;
@@ -2483,7 +2483,7 @@ textarea.w-input,textarea.w-select {
 }
 
 .details-button {
-    margin-top: 19px;
+    margin-top: 0px;
     margin-left: 0px;
     float: none;
     background-color: transparent;
@@ -2495,7 +2495,7 @@ textarea.w-input,textarea.w-select {
 }
 
 .pay-button {
-    margin-top: 19px;
+    margin-top: 0px;
     margin-left: 0px;
     float: none;
     background-color: transparent;
@@ -2672,20 +2672,23 @@ textarea.w-input,textarea.w-select {
     width: 100%;
     height: 100%;
     padding-left: 0px;
+    z-index: 1000;
     background-color: #b9b4b4;
     -webkit-transform: translate3d(0px, 0px, 1000px);
     transform: translate3d(0px, 0px, 1000px);
     color: #000;
+    text-align: center;
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
 }
 
 .modal-content {
     position: fixed;
-    left: 300px;
-    bottom: 200px;
+    left: 450px;
+    bottom: 400px;
+    z-index: 1000;
     width: 40%;
-    height: 40%;
+    height: 20%;
     margin-right: 0px;
     background-color: #fffdfd;
 }
@@ -2706,13 +2709,64 @@ textarea.w-input,textarea.w-select {
 
 .confirm-button-yes {
     margin-top: 25px;
-    margin-left: 86px;
+    margin-left: 0px;
 }
 
 .confirm-button-no {
-    margin-left: 156px;
+    margin-left: 32px;
     padding-left: 21px;
 }
+
+.loader-wrapper {
+    position: absolute;
+    left: 0%;
+    top: 0%;
+    right: auto;
+    bottom: auto;
+    overflow: visible;
+    width: 100%;
+    height: 100%;
+    padding-left: 0px;
+    z-index: 1000;
+    background-color: #b9b4b4;
+    -webkit-transform: translate3d(0px, 0px, 1000px);
+    transform: translate3d(0px, 0px, 1000px);
+    color: #000;
+    text-align: center;
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+}
+
+.loader-content {
+    position: fixed;
+    left: 450px;
+    bottom: 400px;
+    z-index: 1000;
+    width: 40%;
+    height: 40%;
+    margin-right: 0px;
+    background-color: #fffdfd;
+}
+
+.text-block-8 {
+    width: 100%;
+    height: 40%;
+    font-size: 25px;
+}
+
+.loader-div {
+    position: static;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    -o-object-fit: fill;
+    object-fit: fill;
+    -o-object-position: 50% 50%;
+    object-position: 50% 50%;
+}
+
+
 
 .hidden {
     display: none;

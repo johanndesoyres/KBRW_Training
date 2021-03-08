@@ -1,6 +1,7 @@
 require('!!file-loader?name=[name].[ext]!./webflow/index.html')
 require('!!file-loader?name=[name].[ext]!./webflow/order1.html')
 
+
 /* required library for our React app */
 var ReactDOM = require('react-dom')
 var React = require("react")
@@ -10,6 +11,7 @@ var Cookie = require('cookie')
 var XMLHttpRequest = require("xhr2")
 var When = require('when')
 var $ = require("jquery");
+const { timers } = require('jquery')
 
 /* required css for our application */
 require('./webflow/css/webflow.css');
@@ -58,12 +60,74 @@ var cn = function () {
     return Object.keys(classes).map((k) => classes[k] && k || '').join(' ')
 }
 
+var DeleteModal = createReactClass({
+    render() {
+        return <JSXZ in="index" sel=".modal-content">
+            <Z sel=".field-label-2">{this.props.message}</Z>
+            <Z sel=".confirm-button-yes" onClick={() => this.props.callback({ response: "yes" })}>DELETE</Z>
+            <Z sel=".confirm-button-no" onClick={() => this.props.callback({ response: "no" })}>CANCEL</Z>
+        </JSXZ>
+    }
+})
+
+var LoaderModal = createReactClass({
+    render() {
+        return <JSXZ in="index" sel=".loader-content">
+
+        </JSXZ>
+    }
+})
+
 var Layout = createReactClass(
     {
+        getInitialState: function () {
+            return { modal: null, loader: false };
+        },
+        modal(spec) {
+            this.setState({
+                modal: {
+                    ...spec, callback: (res) => {
+                        this.setState({ modal: null }, () => {
+                            if (spec.callback) spec.callback(res)
+                        })
+                    }
+                }
+            })
+        },
+        loader(promise) {
+            return new Promise((resolve, reject) => {
+                console.log("In promise")
+                this.setState({ loader: true }, () => {
+                    promise.then((res) => {
+                        this.setState({ loader: false });
+                        resolve(res)
+                    }, (err) => {
+                        this.setState({ loader: false });
+                        reject(err)
+                    })
+                })
+            })
+        },
         render() {
+            var modal_component = {
+                'delete': (props) => <DeleteModal {...props} />
+            }[this.state.modal && this.state.modal.type];
+            modal_component = modal_component && modal_component(this.state.modal)
+
+            var loader_component = {
+                'load': () => <LoaderModal />
+            }[this.state.loader && 'load'];
+            loader_component = loader_component && loader_component(this.state.loader)
+
             return <JSXZ in="index" sel=".layout" >
                 <Z sel=".layout-container">
-                    <this.props.Child {...this.props} />
+                    <this.props.Child {...{ ...this.props, modal: this.modal, loader: this.loader }} />
+                </Z>
+                <Z sel=".loader-wrapper" className={cn(classNameZ, { 'hidden': !loader_component })}>
+                    {loader_component}
+                </Z>
+                <Z sel=".modal-wrapper" className={cn(classNameZ, { 'hidden': !modal_component })}>
+                    {modal_component}
                 </Z>
             </JSXZ >
         }
@@ -73,6 +137,7 @@ var Header = createReactClass(
     {
         render() {
             return <JSXZ in="index" sel=".header">
+                <Z sel=".submit-button" value="Send"><ChildrenZ /></Z>
                 <Z sel=".page-0" className={cn(classNameZ, { 'selected': this.props.page == 0 })} onClick={() => { GoTo("orders", "", "") }}><ChildrenZ /></Z>
                 <Z sel=".page-1" className={cn(classNameZ, { 'selected': this.props.page == 1 })} onClick={() => { GoTo("orders", "", "", 1) }}><ChildrenZ /></Z>
                 <Z sel=".page-2" className={cn(classNameZ, { 'selected': this.props.page == 2 })} onClick={() => { GoTo("orders", "", "", 2) }}><ChildrenZ /></Z>
@@ -90,40 +155,64 @@ var Orders = createReactClass(
             remoteProps: [remoteProps.orders]
         },
         getInitialState: function () {
-            return { orders: this.props.orders.value };
+            return { orders: this.props.orders.value, changeFromOrders: false };
         },
         Pay(id) {
             var url = "/api/pay/order"
-            HTTP.post(url, id).then((res) => {
+            this.props.loader(HTTP.post(url, id)).then((res) => {
                 if (!("msg" in res)) {
                     this.setState({
-                        orders: res
+                        orders: res,
+                        changeFromOrders: true
                     });
                 }
             })
         },
-        Delete(id) {
-            var url = "/api/delete/order?id=" + id
-            HTTP.delete(url).then((res) => {
-                if (!("msg" in res)) {
-                    this.setState({
-                        orders: res
-                    });
+        DeleteWithModal(id) {
+            this.props.modal({
+                type: 'delete',
+                message: `Proceed Deletion ?`,
+                callback: (value) => {
+                    if (value.response == "yes") {
+                        var url = "/api/delete/order?id=" + id
+                        this.props.loader(HTTP.delete(url)).then((res) => {
+                            if (!("msg" in res)) {
+                                this.setState({
+                                    orders: res,
+                                    changeFromOrders: true
+                                });
+                            }
+                        })
+                    }
                 }
             })
         },
         render() {
-            return this.state.orders.map((order, index) =>
-            (<JSXZ in="index" sel=".table-line" key={index}>
-                <Z sel=".order_id" >{order["_yz_rk"]}</Z>
-                <Z sel=".full_name" >{order["custom.customer.full_name"][0]}</Z>
-                <Z sel=".billing_adress" >{order["custom.shipping_method"][0]}</Z>
-                <Z sel=".items" >{order["status.state"][0]}</Z>
-                <Z sel=".y-button" onClick={() => this.Delete(order["_yz_rk"])}><ChildrenZ /></Z>
-                <Z sel=".z-button" onClick={() => GoTo("order", order["_yz_rk"], '')}><ChildrenZ /></Z>
-                <Z sel=".x-button" onClick={() => this.Pay(order["_yz_rk"])}>{ }<ChildrenZ /></Z>
-                <Z sel=".text-block-3" >Status : {order["status.state"][0]} <br />Payment method : delivery</Z>
-            </JSXZ>))
+            if (this.state.changeFromOrders) {
+                this.state.changeFromOrders = false;
+                return this.state.orders.map((order, index) =>
+                (<JSXZ in="index" sel=".table-line" key={index}>
+                    <Z sel=".order_id" >{order["_yz_rk"]}</Z>
+                    <Z sel=".full_name" >{order["custom.customer.full_name"][0]}</Z>
+                    <Z sel=".billing_adress" >{order["custom.shipping_method"][0]}</Z>
+                    <Z sel=".items" >{order["status.state"][0]}</Z>
+                    <Z sel=".y-button" onClick={() => this.DeleteWithModal(order["_yz_rk"])}><ChildrenZ /></Z>
+                    <Z sel=".z-button" onClick={() => GoTo("order", order["_yz_rk"], '')}><ChildrenZ /></Z>
+                    <Z sel=".x-button" onClick={() => this.Pay(order["_yz_rk"])}>{ }<ChildrenZ /></Z>
+                </JSXZ>))
+            } else {
+                return this.props.orders.value.map((order, index) =>
+                (<JSXZ in="index" sel=".table-line" key={index}>
+                    <Z sel=".order_id" >{order["_yz_rk"]}</Z>
+                    <Z sel=".full_name" >{order["custom.customer.full_name"][0]}</Z>
+                    <Z sel=".billing_adress" >{order["custom.shipping_method"][0]}</Z>
+                    <Z sel=".items" >{order["status.state"][0]}</Z>
+                    <Z sel=".y-button" onClick={() => this.DeleteWithModal(order["_yz_rk"])}><ChildrenZ /></Z>
+                    <Z sel=".z-button" onClick={() => GoTo("order", order["_yz_rk"], '')}><ChildrenZ /></Z>
+                    <Z sel=".x-button" onClick={() => this.Pay(order["_yz_rk"])}>{ }<ChildrenZ /></Z>
+                </JSXZ>))
+            }
+
         }
     });
 
