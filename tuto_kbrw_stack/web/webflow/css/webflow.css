@@ -2663,7 +2663,7 @@ textarea.w-input,textarea.w-select {
 }
 
 .modal-wrapper {
-    position: absolute;
+    position: fixed;
     left: 0%;
     top: 0%;
     right: auto;
@@ -2718,7 +2718,7 @@ textarea.w-input,textarea.w-select {
 }
 
 .loader-wrapper {
-    position: absolute;
+    position: fixed;
     left: 0%;
     top: 0%;
     right: auto;
