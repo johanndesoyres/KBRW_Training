@@ -14,8 +14,7 @@ defmodule TutoKbrwStack.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      # extra_applications: [:logger, :inets, :ewebmachine],
-      extra_applications: [:logger, :plug_cowboy, :inets],
+      extra_applications: [:logger, :plug_cowboy, :inets, :ewebmachine],
       mod: {TutoKbrwStack, []}
     ]
   end
@@ -23,7 +22,7 @@ defmodule TutoKbrwStack.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:ewebmachine, "2.3.0"},
+      {:ewebmachine, "2.3.0"},
       {:plug_cowboy, "~> 2.4.1"},
       {:poison, "~> 4.0.1"},
       {:rulex, git: "https://github.com/kbrw/rulex.git"},

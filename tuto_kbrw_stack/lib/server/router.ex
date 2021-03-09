@@ -1,128 +1,167 @@
 defmodule Server.Router do
-  use Plug.Router
+  use Ewebmachine.Builder.Resources
+  if Mix.env() == :dev, do: plug(Ewebmachine.Plug.Debug)
 
   plug(Plug.Static, from: "priv/static", at: "/static")
   plug(Plug.Static, from: "priv/static", at: "/order/static")
 
   import Plug.Conn
-
   plug(:fetch_query_params)
-  plug(Plug.Parsers, parsers: [:json], json_decoder: Poison)
-  plug(:match)
-  plug(:dispatch)
+  plug(:resource_match)
+  plug(Ewebmachine.Plug.Run)
+  plug(Ewebmachine.Plug.Send)
+  resources_plugs(error_forwarding: "/error/:status", nomatch_404: true)
 
-  def insert_orders() do
-    :inets.start()
-    JsonLoader.load_to_riak_v2("../orders_dump/orders_chunk0.json")
-  end
+  resource "/api/pay/order" do
+    %{}
+  after
+    allowed_methods(do: ["POST"])
 
-  post "/api/pay/order" do
-    case conn.body_params do
-      %{"_json" => id} ->
-        response = Pay.process_payment(id)
-        Pay.stop(id)
+    defh resource_exists(conn, state) do
+      body = conn |> Ewebmachine.fetch_req_body([]) |> Ewebmachine.req_body() |> Poison.decode!()
 
-        case response do
-          :action_unavailable ->
-            send_resp(conn, 500, Poison.encode!(%{"msg" => response}))
+      case is_binary(body) do
+        true ->
+          case Server.Riak.get_object("orders", body) do
+            'not found\n' -> {false, conn, state}
+            _ -> {true, conn, Map.put(state, :id, body)}
+          end
 
-          _ ->
-            # Because Riak is too slow in my computer
-            Server.Riak.search("order_index", "*:*")
-            # Because Riak is too slow in my computer
-            :timer.sleep(1000)
-            %{"response" => %{"docs" => records}} = Server.Riak.search("order_index", "*:*")
+        false ->
+          {false, conn, state}
+      end
+    end
 
-            send_resp(conn, 200, Poison.encode!(records))
-        end
+    defh process_post(conn, state) do
+      response = Pay.process_payment(state.id)
+      Pay.stop(state.id)
 
-      _ ->
-        send_resp(conn, 500, Poison.encode!(%{"msg" => "Error"}))
+      case response do
+        :action_unavailable ->
+          {false, %{conn | resp_body: Poison.encode!(%{"msg" => response})}, state}
+
+        _ ->
+          # Because Riak is too slow in my computer
+          Server.Riak.search("order_index", "*:*")
+          # Because Riak is too slow in my computer
+          :timer.sleep(1000)
+          %{"response" => %{"docs" => records}} = Server.Riak.search("order_index", "*:*")
+
+          {true, %{conn | resp_body: Poison.encode!(records)}, state}
+      end
     end
   end
 
-  delete "/api/delete/order" do
-    case conn.params do
-      %{"id" => id} ->
-        response = Server.Riak.delete_object("orders", id)
+  resource "/api/delete/order/:id" do
+    %{id: id}
+  after
+    allowed_methods(do: ["DELETE"])
 
-        case response do
-          [] ->
-            # Because Riak is too slow in my computer
-            Server.Riak.search("order_index", "*:*")
-            # Because Riak is too slow in my computer
-            :timer.sleep(1000)
-            %{"response" => %{"docs" => records}} = Server.Riak.search("order_index", "*:*")
+    defh resource_exists(conn, state) do
+      case Server.Riak.get_object("orders", state.id) do
+        'not found\n' -> {false, conn, state}
+        _ -> {true, conn, state}
+      end
+    end
 
-            send_resp(conn, 200, Poison.encode!(records))
+    defh delete_resource(conn, state) do
+      response = Server.Riak.delete_object("orders", state.id)
 
-          _ ->
-            send_resp(conn, 500, Poison.encode!(%{"msg" => response}))
-        end
+      case response do
+        [] ->
+          # Because Riak is too slow in my computer
+          Server.Riak.search("order_index", "*:*")
+          # Because Riak is too slow in my computer
+          :timer.sleep(1000)
+          %{"response" => %{"docs" => records}} = Server.Riak.search("order_index", "*:*")
+          {true, %{conn | resp_body: Poison.encode!(records)}, state}
 
-      _ ->
-        send_resp(conn, 500, Poison.encode!(%{"msg" => "Error"}))
+        _ ->
+          {false, %{conn | resp_body: Poison.encode!(%{"msg" => response})}, state}
+      end
     end
   end
 
-  get "/api/order" do
-    case conn.params do
-      %{} ->
-        %{"query" => query, "page" => page, "rows" => rows, "sort" => sort} = conn.params
-        {page, _rest} = Integer.parse(page)
-        {rows, _rest} = Integer.parse(rows)
-        content = Server.Riak.search("order_index", query, page, rows, sort)
-        %{"responseHeader" => %{"status" => status}} = content
+  resource "/api/order" do
+    %{}
+  after
+    allowed_methods(do: ["GET"])
 
-        case status do
-          0 ->
-            %{"response" => %{"docs" => docs}} = content
-            send_resp(conn, 200, Poison.encode!(docs))
+    defh resource_exists(conn, state) do
+      case conn.params do
+        %{} ->
+          %{"query" => query, "page" => page, "rows" => rows, "sort" => sort} = conn.params
+          {page, _rest} = Integer.parse(page)
+          {rows, _rest} = Integer.parse(rows)
+          content = Server.Riak.search("order_index", query, page, rows, sort)
+          %{"responseHeader" => %{"status" => status}} = content
 
-          status_code ->
-            send_resp(conn, status_code, Poison.encode!(content["error"]))
-        end
+          case status do
+            0 ->
+              %{"response" => %{"docs" => docs}} = content
+              {true, conn, Map.put(state, :json_objs, docs)}
 
-      _ ->
-        send_resp(conn, 500, Poison.encode!(%{"msg" => "Error"}))
-    end
-  end
+            _status_code ->
+              {false, conn, Map.put(state, :json_objs, content["error"])}
+          end
 
-  get "/api/orders" do
-    %{"response" => %{"docs" => records}} = Server.Riak.search("order_index", "*:*")
-
-    if length(records) == 0 do
-      insert_orders()
+        _ ->
+          {false, conn, Map.put(state, :json_objs, %{"msg" => "Error"})}
+      end
     end
 
-    case conn.params do
-      %{} ->
-        %{"query" => query, "page" => page, "rows" => rows, "sort" => sort} = conn.params
-        {page, _rest} = Integer.parse(page)
-        {rows, _rest} = Integer.parse(rows)
-        content = Server.Riak.search("order_index", query, page, rows, sort)
+    content_types_provided(do: ["application/json": :to_json])
+    defh(to_json, do: Poison.encode!(state[:json_objs]))
+  end
 
-        %{"responseHeader" => %{"status" => status}} = content
-
-        case status do
-          0 ->
-            %{"response" => %{"docs" => docs}} = content
-            send_resp(conn, 200, Poison.encode!(docs))
-
-          status_code ->
-            send_resp(conn, status_code, Poison.encode!(content["error"]))
-        end
-
-      _ ->
-        send_resp(conn, 500, Poison.encode!(%{"msg" => "Error"}))
+  resource "/api/orders" do
+    %{}
+  after
+    def insert_orders() do
+      :inets.start()
+      JsonLoader.load_to_riak_v2("../orders_dump/orders_chunk0.json")
     end
+
+    allowed_methods(do: ["GET"])
+
+    defh resource_exists(conn, state) do
+      %{"response" => %{"docs" => records}} = Server.Riak.search("order_index", "*:*")
+
+      if length(records) == 0 do
+        insert_orders()
+      end
+
+      case conn.params do
+        %{} ->
+          %{"query" => query, "page" => page, "rows" => rows, "sort" => sort} = conn.params
+          {page, _rest} = Integer.parse(page)
+          {rows, _rest} = Integer.parse(rows)
+          content = Server.Riak.search("order_index", query, page, rows, sort)
+
+          %{"responseHeader" => %{"status" => status}} = content
+
+          case status do
+            0 ->
+              %{"response" => %{"docs" => docs}} = content
+              {true, conn, Map.put(state, :json_objs, docs)}
+
+            _status_code ->
+              {false, conn, Map.put(state, :json_objs, content["error"])}
+          end
+
+        _ ->
+          {false, conn, Map.put(state, :json_objs, %{"msg" => "Error"})}
+      end
+    end
+
+    content_types_provided(do: ["application/json": :to_json])
+    defh(to_json, do: Poison.encode!(state[:json_objs]))
   end
 
-  get _ do
-    send_file(conn, 200, "priv/static/index.html")
-  end
-
-  match _ do
-    send_resp(conn, 404, "Page Not Found")
+  resource "/" do
+    %{}
+  after
+    content_types_provided(do: ["text/html": :to_html])
+    defh(to_html, do: File.read!("priv/static/index.html"))
   end
 end

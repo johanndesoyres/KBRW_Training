@@ -174,7 +174,7 @@ var Orders = createReactClass(
                 message: `Proceed Deletion ?`,
                 callback: (value) => {
                     if (value.response == "yes") {
-                        var url = "/api/delete/order?id=" + id
+                        var url = "/api/delete/order/" + id
                         this.props.loader(HTTP.delete(url)).then((res) => {
                             if (!("msg" in res)) {
                                 this.setState({
@@ -252,6 +252,8 @@ var HTTP = new (function () {
         req.onload = () => {
             console.log("req.responseText")
             console.log(req.responseText)
+            console.log("req.status code")
+            console.log(req.status)
             if (req.status >= 200 && req.status < 300) {
                 resolve(req.responseText && JSON.parse(req.responseText))
             } else {
