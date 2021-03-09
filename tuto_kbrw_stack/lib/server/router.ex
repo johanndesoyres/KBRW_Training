@@ -158,7 +158,7 @@ defmodule Server.Router do
     defh(to_json, do: Poison.encode!(state[:json_objs]))
   end
 
-  resource "/" do
+  resource "/*path" do
     %{}
   after
     content_types_provided(do: ["text/html": :to_html])
